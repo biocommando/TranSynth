@@ -1,0 +1,4 @@
+LIBRARY TRANSITIONSYNTH
+EXPORTS
+VSTPluginMain 
+main=VSTPluginMain
