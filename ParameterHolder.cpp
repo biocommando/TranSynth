@@ -1,109 +1,87 @@
 #include "ParameterHolder.h"
-#include<stdlib.h>
-#include<string.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-ParameterHolder::ParameterHolder(int numOfParams)
+ParameterHolder::ParameterHolder()
 {
-	this->numOfParams = numOfParams;
-	params = (PluginParameter**)malloc(sizeof(PluginParameter*) * numOfParams);
-	for (int i = 0; i < numOfParams; i++)
-	{
-		params[i] = NULL;
-	}
 }
-
 
 ParameterHolder::~ParameterHolder()
 {
-	for (int i = 0; i < numOfParams; i++)
-	{
-		if (params[i] != NULL) 
-		{
-			delete params[i];
-		}
-	}
-	free(params);
 }
 
-PluginParameter *ParameterHolder::addParameter(PluginParameter *param)
+void ParameterHolder::addParameter(PluginParameter param)
 {
-	for (int i = 0; i < numOfParams; i++)
-	{
-		if (params[i] == NULL)
-		{
-			params[i] = param;
-			return param;
-		}
-	}
-	return NULL;
+	params.push_back(param);
 }
-
 
 PluginParameter *ParameterHolder::getParameterById(int id)
 {
-	for (int i = 0; i < numOfParams; i++)
+	for (int i = params.size() - 1; i >= 0; i--)
 	{
-		if (params[i] != NULL && params[i]->getId() == id)
+		if (params[i].getId() == id)
 		{
-			return params[i];
+			return &params[i];
 		}
 	}
-	return NULL;
+	return nullptr;
 }
 
 PluginParameter *ParameterHolder::getParameterByIndex(int index)
 {
-	if (index >= 0 && index < numOfParams)
+	if (index >= 0 && index < params.size())
 	{
-		return params[index];
+		return &params[index];
 	}
-	return NULL;
+	return nullptr;
 }
-
 
 int ParameterHolder::serialize(char **writeBuffer)
 {
-	char tempBuf[100];
-	char *buf = (char*)malloc(1);
-	int size = 0;
-	for (int i = 0; i < numOfParams; i++)
-	{
-		PluginParameter *p = params[i];
-		if (p != NULL)
-		{
-			int bytesWritten = p->serialize(tempBuf);
-			int newSize = size + bytesWritten;
-			buf = (char *)realloc(buf, newSize);
-			memcpy(buf + size, tempBuf, bytesWritten);
-			size = newSize;
-		}
-	}
-	size += 3;
-	buf = (char *)realloc(buf, size);
-	buf[size - 3] = 'E'; 
-	buf[size - 2] = 'n'; 
-	buf[size - 1] = 'd'; 
+	auto s = serializeToString();
+	char *buf = (char *)malloc(s.size());
+	memcpy(buf, s.c_str(), s.size());
 	*writeBuffer = buf;
-	return size;
+	return s.size();
 }
 
-void ParameterHolder::deserialize(char *readBuffer)
+std::string ParameterHolder::serializeToString()
 {
-	PluginParameter *tempParam = new PluginParameter("", "", 0);
-	char *buf = readBuffer;
+	char tempBuf[100];
+	std::string s;
+	for (int i = 0; i < params.size(); i++)
+	{
+		PluginParameter *p = &params[i];
+		s.append(p->serializeToString());
+		/*int bytesWritten = p->serialize(tempBuf);
+			s.append(tempBuf, bytesWritten);*/
+	}
+	s.append("End");
+	return s;
+}
+
+void ParameterHolder::deserialize(const char *readBuffer)
+{
+	// Set initial value to parameters that were not read from the buffer
+	for (int i = 0; i < params.size(); i++)
+	{
+		params[i].setInitialValue();
+	}
+	int idx = 0;
 	int readBytes;
-	do {
-		readBytes = tempParam->deserialize(buf);
+	do
+	{
+		int id;
+		float value;
+		readBytes = deserializeParameter(&readBuffer[idx], &id, &value);
 		if (readBytes > 0)
 		{
-			PluginParameter *p = getParameterById(tempParam->getId());
-			if (p != NULL)
+			PluginParameter *p = getParameterById(id);
+			if (p != nullptr)
 			{
-				p->setValue(tempParam->getValue());
+				p->setValue(value);
 			}
 		}
-		buf += readBytes;
+		idx += readBytes;
 	} while (readBytes);
-	delete tempParam;
 }

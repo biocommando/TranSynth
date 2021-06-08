@@ -7,9 +7,12 @@ class VCMgmtEnvUpdater :
 	ADSRUpdater *parent;
 	int type;
 public:
-	VCMgmtEnvUpdater(ADSRUpdater *parent, int type);
+	VCMgmtEnvUpdater();
+
+	void init(ADSRUpdater *parent, int type);
 
 	void onUpdateWithValue(float value);
+
 	~VCMgmtEnvUpdater();
 };
 

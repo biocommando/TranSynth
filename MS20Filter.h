@@ -10,7 +10,7 @@ private:
 	float Ax, Bx, Cx, Ay, By, Cy;
 	float iCy, Cx0, tempTerm1;
 	float cutoff, integratedCutoff, resonance, cutmod, pC1, pR1;
-	int sampleIdx, SCurve;
+	int sampleIdx;
 	void update();
 	void updateConstants();
 public:
@@ -20,7 +20,7 @@ public:
 	void setCutoff(float v);
 	void setResonance(float v);
 	void setModulation(float v);
-	void setSCurve(int v);
 	void setComponentValues(float c, float r);
+	void setSamplerate(int rate);
 	void reset();
 };

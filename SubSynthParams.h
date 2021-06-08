@@ -9,7 +9,7 @@
 
 class SubSynthParams : CallbackUpdatable
 {
-	SubSynthParam *params[NUM_SUB_SYNTH_PARAMS];
+	SubSynthParam params[NUM_SUB_SYNTH_PARAMS];
 	CallbackUpdatable *onParamsChangedUpdatable;
 public:
 	float getTriAmount();
@@ -40,8 +40,8 @@ public:
 
 	void paramsChanged();
 
-	void paramValuesFromInterpolatedParams(SubSynthParams *p1, SubSynthParams *p2, float ratio);
-	void fromParams(SubSynthParams *p);
+	void paramValuesFromInterpolatedParams(SubSynthParams &p1, SubSynthParams &p2, float ratio);
+	void fromParams(SubSynthParams &p);
 
 	void onUpdate();
 

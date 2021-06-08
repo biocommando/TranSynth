@@ -1,17 +1,19 @@
 #pragma once
 #include "PluginParameter.h"
+#include <string>
+#include <vector>
 
 class ParameterHolder
 {
-	PluginParameter **params;
-	int numOfParams;
+	std::vector<PluginParameter> params;
 public:
-	ParameterHolder(int numOfParams);
-	PluginParameter *addParameter(PluginParameter *param);
+	ParameterHolder();
+	void addParameter(PluginParameter param);
 	PluginParameter *getParameterById(int id);
 	PluginParameter *getParameterByIndex(int index);
 	int serialize(char **writeBuffer);
-	void deserialize(char *readBuffer);
+	std::string serializeToString();
+	void deserialize(const char *readBuffer);
 	~ParameterHolder();
 };
 

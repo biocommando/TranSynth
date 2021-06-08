@@ -8,37 +8,50 @@
 #define SS_VOICEMNGMT_VOICES 16
 #define SS_VOICEMNGMT_PARAMS 4
 
-typedef struct {
+class SubSynthVoice
+{
 public:
-	AdsrEnvelope *envelope;
-	SubSynth *synth;
+	AdsrEnvelope envelope;
+	SubSynth synth;
 	float velocity;
 	int midiNote;
 	bool active;
 	long counter;
 
-	void clear()
+	SubSynthVoice() : active(false), midiNote(-1)
 	{
-		delete envelope;
-		delete synth;
 	}
-} SubSynthVoice;
+};
 
+class GenericCallbackUpdatable : public CallbackUpdatable
+{
+public:
+	float value = 0;
+
+	void onUpdateWithValue(float value)
+	{
+		this->value = value;
+	}
+};
 
 class SubSynthVoiceManagement : CallbackUpdatable, ADSRUpdater
 {
 	SubSynthVoice voices[SS_VOICEMNGMT_VOICES];
-	SubSynthParams *params[SS_VOICEMNGMT_PARAMS];
+	SubSynthParams params[SS_VOICEMNGMT_PARAMS];
 	SubSynthParams interpolated; // temporary variable, defined as a member because of optimization
 	float value;
 	int sampleRate;
 	void updateSynthParams();
-	VCMgmtEnvUpdater *envelopeUpdaters[3];
+	VCMgmtEnvUpdater envelopeUpdaters[3];
 	long nextCounter();
 	void activateVoice(int voiceIndex, int midiNote, int velocity);
 	long counter;
+
+	GenericCallbackUpdatable velocityToVolume;
+	GenericCallbackUpdatable velocityToFilter;
+
 public:
-	SubSynthVoiceManagement(int samplerate);
+	SubSynthVoiceManagement();
 	~SubSynthVoiceManagement();
 	void onUpdate();
 	void calculateNext();
@@ -48,11 +61,15 @@ public:
 	void noteOn(int midiNote, int velocity);
 	void noteOff(int midiNote);
 
+	void setSampleRate(int rate);
+
 	CallbackUpdatable *getAttackUpdater();
 	CallbackUpdatable *getDecayUpdater();
 	CallbackUpdatable *getReleaseUpdater();
 
+	CallbackUpdatable *getVelocityToFilterUpdater();
+	CallbackUpdatable *getVelocityToVolumeUpdater();
+
 	float getValue();
 	SubSynthParams *getParams(int paramSet);
 };
-

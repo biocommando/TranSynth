@@ -1,14 +1,18 @@
 #include "VCMgmtEnvUpdater.h"
 
-VCMgmtEnvUpdater::VCMgmtEnvUpdater(ADSRUpdater *parent, int type)
+VCMgmtEnvUpdater::VCMgmtEnvUpdater() : parent(nullptr), type(-1)
 {
-	this->parent = parent;
-	this->type = type;
 }
 
 
 VCMgmtEnvUpdater::~VCMgmtEnvUpdater()
 {}
+
+void VCMgmtEnvUpdater::init(ADSRUpdater *parent, int type)
+{
+	this->parent = parent;
+	this->type = type;
+}
 
 void VCMgmtEnvUpdater::onUpdateWithValue(float value)
 {

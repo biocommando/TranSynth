@@ -1,21 +1,23 @@
 #pragma once
-#define OSC_SINE 0
-#define OSC_TRIANGLE 1
-#define OSC_SAW 2
-#define OSC_SQUARE 3
+enum OscType
+{
+	OSC_SINE,
+	OSC_TRIANGLE,
+	OSC_SAW,
+	OSC_SQUARE
+};
+
 class BasicOscillator
 {
 private:
-	float phase, frequency, Hz_to_F;
-	float sin1(float phase);
-	float tri1(float phase);
-	float saw1(float phase);
-	float sqr1(float phase);
+	float phase, frequency, hzToF;
+
 public:
 	BasicOscillator(int sampleRate);
 	~BasicOscillator();
 	void calculateNext();
-	float getValue(int oscType);
+	float getValue(enum OscType oscType);
 	void setFrequency(float f_Hz);
+	void setSamplerate(int rate);
+	void randomizePhase();
 };
-

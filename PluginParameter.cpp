@@ -1,12 +1,12 @@
-#include<string.h>
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "PluginParameter.h"
 
 void log(PluginParameter *p)
 {
-	FILE *f = fopen("C:\\Users\\Käyttäjä\\Documents\\Visual Studio 2013\\Projects\\TransitionSynth\\Release\\log.txt", "a");
+	FILE *f = fopen("C:\\Users\\Kï¿½yttï¿½jï¿½\\Documents\\Visual Studio 2013\\Projects\\TransitionSynth\\Release\\log.txt", "a");
 	char n[100], ns[8];
 	p->getName(n, 100);
 	p->getShortName(ns);
@@ -14,39 +14,33 @@ void log(PluginParameter *p)
 	fclose(f);
 }
 
-PluginParameter::PluginParameter(const char *name, const char *shortName, int id, float defaultValue)
+PluginParameter::PluginParameter(const std::string &name, const std::string &shortName, int id,
+								 CallbackUpdatable *cu, float defaultValue)
+	: name(name), shortName(shortName), callbackUpdatable(cu), id(id), value(defaultValue), initialValue(defaultValue)
 {
-	strncpy(this->name, name, 64);
-	this->name[63] = 0;
-	strncpy(this->shortName, shortName, 8);
-	this->shortName[7] = 0;
-	this->callbackUpdatable = NULL;
-	this->id = id;
-	value = defaultValue;
+	if (callbackUpdatable)
+		callbackUpdatable->onUpdateWithValue(value);
 }
-
 
 PluginParameter::~PluginParameter()
 {
 }
-
-void PluginParameter::setOnChanged(CallbackUpdatable *callbackUpdatable)
-{
-	this->callbackUpdatable = callbackUpdatable;
-	callbackUpdatable->onUpdateWithValue(value);
-}
-
 
 void PluginParameter::setValue(float value)
 {
 	if (fabs(value - this->value) > 1e-6)
 	{
 		this->value = value;
-		if (callbackUpdatable != NULL)
+		if (callbackUpdatable != nullptr)
 		{
 			this->callbackUpdatable->onUpdateWithValue(value);
 		}
 	}
+}
+
+void PluginParameter::setInitialValue()
+{
+	setValue(initialValue);
 }
 
 float PluginParameter::getValue()
@@ -61,14 +55,21 @@ int PluginParameter::getId()
 
 void PluginParameter::getName(char *name, int maxLen)
 {
-	strncpy(name, this->name, maxLen);
+	strncpy(name, this->name.c_str(), maxLen);
 	name[maxLen - 1] = 0;
 }
 
 void PluginParameter::getShortName(char *name)
 {
-	strcpy(name, shortName);
+	strcpy(name, shortName.c_str());
 }
+
+constexpr int serialize_magicSize = sizeof(int);
+constexpr int serialize_payloadSizeInfoSize = sizeof(int);
+constexpr int serialize_idSize = sizeof(int);
+constexpr int serialize_valueSize = sizeof(float);
+constexpr int serialize_payloadSize = serialize_idSize + serialize_valueSize;
+constexpr int serialize_totalSize = serialize_magicSize + serialize_payloadSizeInfoSize + serialize_payloadSize;
 
 /*
  * The serialized format is:
@@ -83,44 +84,43 @@ void PluginParameter::getShortName(char *name)
 int PluginParameter::serialize(char *writeBuffer)
 {
 	const int magic = 0xDADA;
-	const int magicSize = sizeof(int);
-	const int payloadSizeInfoSize = sizeof(int);
-	const int idSize = sizeof(int);
-	const int valueSize = sizeof(float);
-	const int payloadSize = idSize + valueSize;
+	const int payloadSize = serialize_payloadSize;
 	char *write = writeBuffer;
-	memcpy(write, &magic, magicSize);
-	write += magicSize;
-	memcpy(write, &payloadSize, idSize);
-	write += payloadSizeInfoSize;
-	memcpy(write, &id, idSize);
-	write += idSize;
-	memcpy(write, &value, valueSize);
-	return magicSize + payloadSizeInfoSize + payloadSize;
+	memcpy(write, &magic, serialize_magicSize);
+	write += serialize_magicSize;
+	memcpy(write, &payloadSize, serialize_payloadSizeInfoSize);
+	write += serialize_payloadSizeInfoSize;
+	memcpy(write, &id, serialize_idSize);
+	write += serialize_idSize;
+	memcpy(write, &value, serialize_valueSize);
+	return serialize_totalSize;
 }
 
-int PluginParameter::deserialize(const char *readBuffer)
+std::string PluginParameter::serializeToString()
+{
+	char buf[serialize_totalSize];
+	serialize(buf);
+	return std::string(buf, serialize_totalSize);
+}
+
+int deserializeParameter(const char *readBuffer, int *id, float *value)
 {
 	const int magic = 0xDADA;
-	const int magicSize = sizeof(int);
-	const int idSize = sizeof(int);
-	const int valueSize = sizeof(float);
-	const int payloadSizeInfoSize = sizeof(int);
 	const char *read = readBuffer;
 	int mgc = 0;
-	memcpy(&mgc, read, magicSize);
+	memcpy(&mgc, read, serialize_magicSize);
 	if (mgc == magic)
 	{
-		read += magicSize;
+		read += serialize_magicSize;
 		int payloadSize = 0;
-		memcpy(&payloadSize, read, payloadSizeInfoSize);
-		if (payloadSize >= idSize + valueSize)
+		memcpy(&payloadSize, read, serialize_payloadSizeInfoSize);
+		if (payloadSize >= serialize_payloadSize)
 		{
-			read += payloadSizeInfoSize;
-			memcpy(&id, read, idSize);
-			read += idSize;
-			memcpy(&value, read, valueSize);
-			return magicSize + payloadSizeInfoSize + payloadSize;
+			read += serialize_payloadSizeInfoSize;
+			memcpy(id, read, serialize_idSize);
+			read += serialize_idSize;
+			memcpy(value, read, serialize_valueSize);
+			return serialize_totalSize;
 		}
 	}
 	return 0;

@@ -5,13 +5,15 @@ class SubSynthParam :
 {
 	float value;
 	CallbackUpdatable *onUpdate;
-	int id;
+	//int id;
 public:
 	void onUpdateWithValue(float value);
 	float getValue();
 	void setValueBypassingCallback(float value);
 
-	SubSynthParam(CallbackUpdatable *onUpdate);
+	SubSynthParam();
 	~SubSynthParam();
+
+	void init(CallbackUpdatable *onUpdate);
 };
 
