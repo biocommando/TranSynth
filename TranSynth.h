@@ -30,13 +30,15 @@
 #define PARAM_STEREO_UNISON_DETUNE 5
 #define PARAM_WT_POS 6
 #define PARAM_WT_TYPE 7
-#define NUM_PARAMS 60
+#define PARAM_PATCH_VOLUME 8
+#define NUM_PARAMS 61
 
 class TranSynth : public AudioEffectX
 {
 private:
     ParameterHolder parameterHolder;
     SubSynthVoiceManagement voiceMgmt;
+
     void addParameter(const std::string &name, const std::string &shortName, int id,
                       CallbackUpdatable *cu, float defaultValue = 0);
 

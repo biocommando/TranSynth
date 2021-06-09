@@ -211,6 +211,7 @@ void SubSynthVoiceManagement::calculateNext()
 
 void SubSynthVoiceManagement::getValue(float *ch1, float *ch2)
 {
+    const auto patchVolume = volume.value;
     *ch1 = *ch2 = 0;
     for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
     {
@@ -218,7 +219,7 @@ void SubSynthVoiceManagement::getValue(float *ch1, float *ch2)
         {
             const auto velToVol = velocityToVolume.value;
             const auto vol = (1 - velToVol) + velToVol * voices[i].velocity;
-            const auto value = voices[i].synth.getValue() * vol;
+            const auto value = voices[i].synth.getValue() * vol * patchVolume;
 
             if (voices[i].channel == 0)
             {
@@ -323,6 +324,10 @@ CallbackUpdatable *SubSynthVoiceManagement::getWtPosUpdater()
 CallbackUpdatable *SubSynthVoiceManagement::getWtTypeUpdater()
 {
     return &wtUpdater;
+}
+CallbackUpdatable *SubSynthVoiceManagement::getVolumeUpdater()
+{
+    return &volume;
 }
 
 long SubSynthVoiceManagement::nextCounter()

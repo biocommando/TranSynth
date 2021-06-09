@@ -43,9 +43,10 @@ int ParameterHolder::serialize(char **writeBuffer, const char *header, int heade
     memcpy(buf, header, headerSize);
     memcpy(buf + headerSize, s.c_str(), s.size());
     *writeBuffer = buf;
-    return s.size();
+    return s.size() + headerSize;
 }
 
+extern void logf(const char*, float);
 std::string ParameterHolder::serializeToString()
 {
     char tempBuf[100];
@@ -54,13 +55,10 @@ std::string ParameterHolder::serializeToString()
     {
         PluginParameter *p = &params[i];
         s.append(p->serializeToString());
-        /*int bytesWritten = p->serialize(tempBuf);
-            s.append(tempBuf, bytesWritten);*/
     }
     s.append("End");
     return s;
 }
-
 void ParameterHolder::deserialize(const char *readBuffer)
 {
     // Set initial value to parameters that were not read from the buffer

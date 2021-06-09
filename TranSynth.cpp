@@ -133,6 +133,8 @@ void TranSynth::open()
     addParameter("Wavetable type", "Wavetbl", createId(PARAM_WT_TYPE), voiceMgmt.getWtTypeUpdater());
     addParameter("Wavetable position", "WtblPos", createId(PARAM_WT_POS), voiceMgmt.getWtPosUpdater());
 
+    addParameter("Volume", "Volume", createId(PARAM_PATCH_VOLUME), voiceMgmt.getVolumeUpdater(), 1.0f);
+
     isSynth(true);
     programsAreChunks();
 }
@@ -261,7 +263,7 @@ VstInt32 TranSynth::processEvents(VstEvents *events)
 
 void TranSynth::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames)
 {
-    bool stereo = voiceMgmt.isStereoEnabled();
+    const bool stereo = voiceMgmt.isStereoEnabled();
     float ch1, ch2;
     for (int i = 0; i < sampleFrames; i++)
     {

@@ -82,6 +82,7 @@ class SubSynthVoiceManagement : public WtGenerator, CallbackUpdatable, ADSRUpdat
     GenericCallbackUpdatable velocityToFilter;
     GenericCallbackUpdatable stereoEffect;
     GenericCallbackUpdatable wtPos;
+    GenericCallbackUpdatable volume;
     WtUpdater wtUpdater;
 
     void noteOn(float midiNote, int noteNumber, int velocity, int channel);
@@ -108,6 +109,7 @@ public:
     CallbackUpdatable *getStereoEffectUpdater();
     CallbackUpdatable *getWtPosUpdater();
     CallbackUpdatable *getWtTypeUpdater();
+    CallbackUpdatable *getVolumeUpdater();
 
     void generateWavetable(int id);
 
