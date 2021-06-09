@@ -67,25 +67,24 @@ void SubSynthVoiceManagement::generateWavetable(int id)
     if (id == 0 || id >= 4)
     {
         t = OSC_SINE;
-        vol = 1.0f / sqrt(2);
+        vol = sqrt(2);
 
-        gen2Freq = 50 * id;
-        gen3.setFrequency(25 * (id + 3));
+        gen2Freq = 50 * id + (id - 4) * 2;
+        gen3.setFrequency(25 * (id - 2));
     }
     if (id == 1)
     {
         t = OSC_TRIANGLE;
-        vol = 1.0f / sqrt(3);
+        vol = sqrt(3);
     }
     if (id == 2)
     {
         t = OSC_SQUARE;
-        vol = 0.5;
     }
     if (id == 3)
     {
         t = OSC_SAW;
-        vol = 1.0f / sqrt(3);
+        vol = sqrt(3);
     }
     useFm = id >= 4;
     for (int i = 0; i < wtSize; i++)
