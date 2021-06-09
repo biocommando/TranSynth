@@ -47,6 +47,7 @@ class SubSynthVoiceManagement : CallbackUpdatable, ADSRUpdater
 	long nextCounter();
 	void activateVoice(int voiceIndex, float midiNote, int noteNumber, int velocity, int channel);
 	long counter;
+	int wtId = 1;
 
 	GenericCallbackUpdatable velocityToVolume;
 	GenericCallbackUpdatable velocityToFilter;
@@ -75,6 +76,9 @@ public:
 	CallbackUpdatable *getVelocityToVolumeUpdater();
 	CallbackUpdatable *getStereoEffectUpdater();
 	CallbackUpdatable *getWtPosUpdater();
+
+	int getWavetableId();
+	void loadWavetable(int wtId);
 
 	bool isStereoEnabled();
 

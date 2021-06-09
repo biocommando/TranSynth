@@ -11,7 +11,7 @@ public:
 	void addParameter(PluginParameter param);
 	PluginParameter *getParameterById(int id);
 	PluginParameter *getParameterByIndex(int index);
-	int serialize(char **writeBuffer);
+	int serialize(char **writeBuffer, const char *header, int headerSize);
 	std::string serializeToString();
 	void deserialize(const char *readBuffer);
 	~ParameterHolder();

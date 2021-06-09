@@ -10,9 +10,23 @@ SubSynthVoiceManagement::SubSynthVoiceManagement() : counter(0)
 	{
 		envelopeUpdaters[i].init(this, i);
 	}
-	
+	FILE *f = fopen("TranSynWtConf.txt", "r");
+	int id = fgetc(f);
+	fclose(f);
+	loadWavetable(id);
+}
+int SubSynthVoiceManagement::getWavetableId()
+{
+	return wtId;
+}
+
+void SubSynthVoiceManagement::loadWavetable(int wtId)
+{
+	this->wtId = wtId;
 	FILE *f;
-	f = fopen("21-06-09-wavetable.raw", "rb");
+	char fname[] = "X-TranSyn.raw";
+	fname[0] = wtId;
+	f = fopen(fname, "rb");
 	short buf[wtSize];
 	fread(buf, 2, wtSize, f);
 	for (int i = 0; i < wtSize; i++)

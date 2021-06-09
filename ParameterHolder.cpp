@@ -36,11 +36,12 @@ PluginParameter *ParameterHolder::getParameterByIndex(int index)
 	return nullptr;
 }
 
-int ParameterHolder::serialize(char **writeBuffer)
+int ParameterHolder::serialize(char **writeBuffer, const char *header, int headerSize)
 {
 	auto s = serializeToString();
-	char *buf = (char *)malloc(s.size());
-	memcpy(buf, s.c_str(), s.size());
+	char *buf = (char *)malloc(s.size() + headerSize);
+	memcpy(buf, header, headerSize);
+	memcpy(buf + headerSize, s.c_str(), s.size());
 	*writeBuffer = buf;
 	return s.size();
 }

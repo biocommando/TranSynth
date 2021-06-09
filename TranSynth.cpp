@@ -143,13 +143,23 @@ TranSynth::~TranSynth()
 
 VstInt32 TranSynth::getChunk(void **data, bool isPreset)
 {
-	return parameterHolder.serialize((char **)data);
+	char header[] = "WX";
+	header[1] = voiceMgmt.getWavetableId();
+	return parameterHolder.serialize((char **)data, header, 2);
 }
 
 VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
 {
-	log("setChunk");
-	parameterHolder.deserialize((char *)data);
+	const auto buf = (char *)data;
+	if (buf[0] == 'W')
+	{
+		voiceMgmt.loadWavetable(buf[1]);
+		parameterHolder.deserialize(buf + 2);
+	}
+	else
+	{
+		parameterHolder.deserialize(buf);
+	}
 	return 0;
 }
 
