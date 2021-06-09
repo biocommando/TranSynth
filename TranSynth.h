@@ -35,26 +35,26 @@
 class TranSynth : public AudioEffectX
 {
 private:
-	ParameterHolder parameterHolder;
-	SubSynthVoiceManagement voiceMgmt;
-	void addParameter(const std::string &name, const std::string &shortName, int id,
-					  CallbackUpdatable *cu, float defaultValue = 0);
+    ParameterHolder parameterHolder;
+    SubSynthVoiceManagement voiceMgmt;
+    void addParameter(const std::string &name, const std::string &shortName, int id,
+                      CallbackUpdatable *cu, float defaultValue = 0);
 
 public:
-	TranSynth(audioMasterCallback audioMaster);
-	~TranSynth();
-	VstInt32 getChunk(void **data, bool isPreset);
-	VstInt32 setChunk(void *data, VstInt32 byteSize, bool isPreset);
+    TranSynth(audioMasterCallback audioMaster);
+    ~TranSynth();
+    VstInt32 getChunk(void **data, bool isPreset);
+    VstInt32 setChunk(void *data, VstInt32 byteSize, bool isPreset);
 
-	void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames);
-	float getParameter(VstInt32 index);
-	void setParameter(VstInt32 index, float value);
-	void getParameterName(VstInt32 index, char *label);
-	void getParameterDisplay(VstInt32 index, char *text);
-	void getParameterLabel(VstInt32 index, char *label);
-	bool getEffectName(char *name);
-	bool getProductString(char *text);
-	bool getVendorString(char *text);
-	VstInt32 processEvents(VstEvents *events);
-	void open();
+    void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames);
+    float getParameter(VstInt32 index);
+    void setParameter(VstInt32 index, float value);
+    void getParameterName(VstInt32 index, char *label);
+    void getParameterDisplay(VstInt32 index, char *text);
+    void getParameterLabel(VstInt32 index, char *label);
+    bool getEffectName(char *name);
+    bool getProductString(char *text);
+    bool getVendorString(char *text);
+    VstInt32 processEvents(VstEvents *events);
+    void open();
 };

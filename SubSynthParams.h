@@ -9,47 +9,47 @@
 
 class SubSynthParams : CallbackUpdatable
 {
-	SubSynthParam params[NUM_SUB_SYNTH_PARAMS];
-	CallbackUpdatable *onParamsChangedUpdatable;
+    SubSynthParam params[NUM_SUB_SYNTH_PARAMS];
+    CallbackUpdatable *onParamsChangedUpdatable;
+
 public:
-	float getTriAmount();
-	float getSawAmount();
-	float getSqrAmount();
-	float getDetuneAmount();
-	float getFilterCutoff();
-	float getFilterResonance();
-	float getLfoFrequency();
-	float getLfoToPitchAmount();
-	float getLfoToCutoffAmount();
-	float getVolume();
-	float getDistortion();
-	float getWtMix();
-	float getWtWin();
+    float getTriAmount();
+    float getSawAmount();
+    float getSqrAmount();
+    float getDetuneAmount();
+    float getFilterCutoff();
+    float getFilterResonance();
+    float getLfoFrequency();
+    float getLfoToPitchAmount();
+    float getLfoToCutoffAmount();
+    float getVolume();
+    float getDistortion();
+    float getWtMix();
+    float getWtWin();
 
-	CallbackUpdatable *setTriAmount();
-	CallbackUpdatable *setSawAmount();
-	CallbackUpdatable *setSqrAmount();
-	CallbackUpdatable *setDetuneAmount();
-	CallbackUpdatable *setFilterCutoff();
-	CallbackUpdatable *setFilterResonance();
-	CallbackUpdatable *setLfoFrequency();
-	CallbackUpdatable *setLfoToPitchAmount();
-	CallbackUpdatable *setLfoToCutoffAmount();
-	CallbackUpdatable *setVolume();
-	CallbackUpdatable *setDistortion();
-	CallbackUpdatable *setWtMix();
-	CallbackUpdatable *setWtWin();
+    CallbackUpdatable *setTriAmount();
+    CallbackUpdatable *setSawAmount();
+    CallbackUpdatable *setSqrAmount();
+    CallbackUpdatable *setDetuneAmount();
+    CallbackUpdatable *setFilterCutoff();
+    CallbackUpdatable *setFilterResonance();
+    CallbackUpdatable *setLfoFrequency();
+    CallbackUpdatable *setLfoToPitchAmount();
+    CallbackUpdatable *setLfoToCutoffAmount();
+    CallbackUpdatable *setVolume();
+    CallbackUpdatable *setDistortion();
+    CallbackUpdatable *setWtMix();
+    CallbackUpdatable *setWtWin();
 
-	void setOnParamsChanged(CallbackUpdatable *callbackUpdatable);
+    void setOnParamsChanged(CallbackUpdatable *callbackUpdatable);
 
-	void paramsChanged();
+    void paramsChanged();
 
-	void paramValuesFromInterpolatedParams(SubSynthParams &p1, SubSynthParams &p2, float ratio);
-	void fromParams(SubSynthParams &p);
+    void paramValuesFromInterpolatedParams(SubSynthParams &p1, SubSynthParams &p2, float ratio);
+    void fromParams(SubSynthParams &p);
 
-	void onUpdate();
+    void onUpdate();
 
-	SubSynthParams();
-	~SubSynthParams();
+    SubSynthParams();
+    ~SubSynthParams();
 };
-

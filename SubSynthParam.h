@@ -1,19 +1,19 @@
 #pragma once
 #include "CallbackUpdatable.h"
 class SubSynthParam :
-	public CallbackUpdatable
+    public CallbackUpdatable
 {
-	float value;
-	CallbackUpdatable *onUpdate;
-	//int id;
+    float value;
+    CallbackUpdatable *onUpdate;
+    //int id;
 public:
-	void onUpdateWithValue(float value);
-	float getValue();
-	bool setValueBypassingCallback(float value);
+    void onUpdateWithValue(float value);
+    float getValue();
+    bool setValueBypassingCallback(float value);
 
-	SubSynthParam();
-	~SubSynthParam();
+    SubSynthParam();
+    ~SubSynthParam();
 
-	void init(CallbackUpdatable *onUpdate);
+    void init(CallbackUpdatable *onUpdate);
 };
 

@@ -1,18 +1,17 @@
 #pragma once
 #include "CallbackUpdatable.h"
 #include "ADSRUpdater.h"
-class VCMgmtEnvUpdater :
-	public CallbackUpdatable
+class VCMgmtEnvUpdater : public CallbackUpdatable
 {
-	ADSRUpdater *parent;
-	int type;
+    ADSRUpdater *parent;
+    int type;
+
 public:
-	VCMgmtEnvUpdater();
+    VCMgmtEnvUpdater();
 
-	void init(ADSRUpdater *parent, int type);
+    void init(ADSRUpdater *parent, int type);
 
-	void onUpdateWithValue(float value);
+    void onUpdateWithValue(float value);
 
-	~VCMgmtEnvUpdater();
+    ~VCMgmtEnvUpdater();
 };
-

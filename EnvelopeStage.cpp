@@ -1,51 +1,48 @@
 #include "EnvelopeStage.h"
 
-
 EnvelopeStage::EnvelopeStage(bool hasLength)
 {
-	length = hasLength ? 0 : -1;
-	phase = 0;
+    length = hasLength ? 0 : -1;
+    phase = 0;
 }
-
 
 EnvelopeStage::~EnvelopeStage()
 {
 }
 
-
 void EnvelopeStage::setLength(int samples)
 {
-	if (length >= 0 && samples >= 0)
-	{
-		length = samples;
-	}
+    if (length >= 0 && samples >= 0)
+    {
+        length = samples;
+    }
 }
 
 void EnvelopeStage::calcuateNext()
 {
-	if (++phase >= length)
-	{
-		phase = length;
-		ratio = 1;
-	}
-	else
-	{
-		ratio = phase / (float) length;
-	}
+    if (++phase >= length)
+    {
+        phase = length;
+        ratio = 1;
+    }
+    else
+    {
+        ratio = phase / (float)length;
+    }
 }
 
 bool EnvelopeStage::hasNext()
 {
-	return length == -1 || phase < length;
+    return length == -1 || phase < length;
 }
 
 float EnvelopeStage::getRatio()
 {
-	return ratio;
+    return ratio;
 }
 
 void EnvelopeStage::reset()
 {
-	phase = 0;
-	ratio = 0;
+    phase = 0;
+    ratio = 0;
 }
