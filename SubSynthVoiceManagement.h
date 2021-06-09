@@ -17,6 +17,7 @@ public:
 	int midiNote;
 	bool active;
 	long counter;
+	int channel;
 
 	SubSynthVoice() : active(false), midiNote(-1)
 	{
@@ -44,12 +45,15 @@ class SubSynthVoiceManagement : CallbackUpdatable, ADSRUpdater
 	void updateSynthParams();
 	VCMgmtEnvUpdater envelopeUpdaters[3];
 	long nextCounter();
-	void activateVoice(int voiceIndex, int midiNote, int velocity);
+	void activateVoice(int voiceIndex, float midiNote, int noteNumber, int velocity, int channel);
 	long counter;
 
 	GenericCallbackUpdatable velocityToVolume;
 	GenericCallbackUpdatable velocityToFilter;
+	GenericCallbackUpdatable stereoEffect;
+	GenericCallbackUpdatable wtPos;
 
+	void noteOn(float midiNote, int noteNumber, int velocity, int channel);
 public:
 	SubSynthVoiceManagement();
 	~SubSynthVoiceManagement();
@@ -69,7 +73,11 @@ public:
 
 	CallbackUpdatable *getVelocityToFilterUpdater();
 	CallbackUpdatable *getVelocityToVolumeUpdater();
+	CallbackUpdatable *getStereoEffectUpdater();
+	CallbackUpdatable *getWtPosUpdater();
 
-	float getValue();
+	bool isStereoEnabled();
+
+	void getValue(float *ch1, float *ch2);
 	SubSynthParams *getParams(int paramSet);
 };

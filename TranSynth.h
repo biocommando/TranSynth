@@ -16,13 +16,17 @@
 #define PARAM_LFO_TO_CUTOFF 8
 #define PARAM_VOLUME 9
 #define PARAM_DISTORTION 10
+#define PARAM_WT_MIX 11
+#define PARAM_WT_WIN 13
 #define GROUPLESS_PARAM(param) (10000 + (param))
 #define PARAM_ATTACK 0
 #define PARAM_DECAY 1
 #define PARAM_RELEASE 2
 #define PARAM_VEL_TO_VOLUME 3
 #define PARAM_VEL_TO_FILTER 4
-#define NUM_PARAMS 49
+#define PARAM_STEREO_UNISON_DETUNE 5
+#define PARAM_WT_POS 6
+#define NUM_PARAMS 59
 
 class TranSynth : public AudioEffectX
 {

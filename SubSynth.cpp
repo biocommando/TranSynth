@@ -12,6 +12,12 @@ void SubSynth::onUpdate()
 	updateParams();
 }
 
+void SubSynth::setWavetable(float *wt)
+{
+	osc1.setWavetable(wt);
+	osc2.setWavetable(wt);
+}
+
 void SubSynth::setSamplerate(int rate)
 {
 	osc1.setSamplerate(rate);
@@ -39,9 +45,18 @@ void SubSynth::updateParams()
 
 	filter.setCutoff(params.getFilterCutoff());
 	filter.setResonance(params.getFilterResonance());
+
+	osc1.setWaveTableParams(wtPos, params.getWtWin());
+	osc2.setWaveTableParams(wtPos, params.getWtWin());
 }
 
-void SubSynth::setNoteFrequency(int midiNote)
+void SubSynth::setWavetablePos(float pos)
+{
+	wtPos = pos;
+	updateParams();
+}
+
+void SubSynth::setNoteFrequency(float midiNote)
 {
 	this->midiNote = midiNote;
 	filter.reset();
@@ -93,6 +108,8 @@ void SubSynth::calculateNext()
 		oscOutput += getOscValue(OSC_SQUARE) * oscAmount;
 	if ((oscAmount = params.getTriAmount()) > 0)
 		oscOutput += getOscValue(OSC_TRIANGLE) * oscAmount;
+	if ((oscAmount = params.getWtMix()) > 0)
+		oscOutput += getOscValue(OSC_WT) * oscAmount;
 
 	oscOutput *= 0.5f;
 

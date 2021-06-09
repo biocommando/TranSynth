@@ -1,11 +1,31 @@
 #include "BasicOscillator.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include <math.h>
+constexpr int wtSize = 10000;
+
+extern void logf(const char*, float);
 
 BasicOscillator::BasicOscillator(int sampleRate) : phase(0), hzToF(1.0f / (float)sampleRate),
-												   frequency(0)
+												   frequency(0), wtPos(0), wtWindow(0)
 {
 	randomizePhase();
+}
+int logged=3;
+void BasicOscillator::setWaveTableParams(float pos, float window)
+{
+	wtWindow = 2 + window * 300;
+	wtPos = pos * (wtSize - wtWindow - 1);
+	if (!logged) return;
+	logged--;
+	logf("wtWindow", wtWindow);
+	logf("wtPos", wtPos);
+	logf("pos", pos);
+}
+
+void BasicOscillator::setWavetable(float *wt)
+{
+	this->wt = wt;
 }
 
 BasicOscillator::~BasicOscillator()
@@ -43,6 +63,11 @@ inline float sqr1(float phase)
 	return phase < 0.5 ? 1.0f : -1.0f;
 }
 
+inline float wt1(float *wt, float phase, int pos, int window)
+{
+	return wt[(int)(pos + window * phase)];
+}
+
 void BasicOscillator::calculateNext()
 {
 	phase = phase + frequency;
@@ -65,6 +90,8 @@ float BasicOscillator::getValue(enum OscType oscType)
 		return saw1(phase);
 	case OSC_SQUARE:
 		return sqr1(phase);
+	case OSC_WT:
+		return wt1(wt, phase, wtPos, wtWindow);
 	default:
 		return 0;
 	}

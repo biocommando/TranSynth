@@ -19,6 +19,7 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
 	setNumOutputs(2);		 // stereo out
 	setUniqueID(-809164751); // identify
 }
+//#define DEBUG_LOG
 void log(const char *s)
 {
 #ifdef DEBUG_LOG
@@ -58,7 +59,6 @@ void TranSynth::addParameter(const std::string &name, const std::string &shortNa
 
 void TranSynth::open()
 {
-	log("open");
 	srand((int)time(NULL));
 	int sampleRate = (int)this->getSampleRate();
 	voiceMgmt.setSampleRate(sampleRate);
@@ -80,6 +80,14 @@ void TranSynth::open()
 		name = groupPrefix + "Sqr amount";
 		shortName = groupPrefix + "Sqr";
 		addParameter(name, shortName, createId(group, PARAM_SQR), params->setSqrAmount());
+
+		name = groupPrefix + "Wave amount";
+		shortName = groupPrefix + "Wt";
+		addParameter(name, shortName, createId(group, PARAM_WT_MIX), params->setWtMix());
+
+		name = groupPrefix + "Wave window";
+		shortName = groupPrefix + "WtW";
+		addParameter(name, shortName, createId(group, PARAM_WT_WIN), params->setWtWin());
 
 		name = groupPrefix + "Detune";
 		shortName = groupPrefix + "Dtn";
@@ -121,7 +129,10 @@ void TranSynth::open()
 	addParameter("Velocity to volume", "Vel>Vol", createId(PARAM_VEL_TO_VOLUME), voiceMgmt.getVelocityToVolumeUpdater(), 1);
 	addParameter("Velocity to filter", "Vel>Flt", createId(PARAM_VEL_TO_FILTER), voiceMgmt.getVelocityToFilterUpdater(), 0);
 
-	log("open done");
+	addParameter("Stereo unison detune", "Stereo", createId(PARAM_STEREO_UNISON_DETUNE), voiceMgmt.getStereoEffectUpdater(), 0);
+
+	addParameter("Wavetable position", "WtblPos", createId(PARAM_WT_POS), voiceMgmt.getWtPosUpdater());
+
 	isSynth(true);
 	programsAreChunks();
 }
@@ -144,14 +155,11 @@ VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
 
 float TranSynth::getParameter(VstInt32 index)
 {
-	log("getParameter");
 	PluginParameter *param = parameterHolder.getParameterByIndex(index);
 	if (param == nullptr)
 	{
-		log("param null");
 		return 0;
 	}
-	logf("param value", param->getValue());
 	return param->getValue();
 }
 void TranSynth::setParameter(VstInt32 index, float value)
@@ -229,16 +237,16 @@ VstInt32 TranSynth::processEvents(VstEvents *events)
 
 void TranSynth::processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames)
 {
-	// Real processing goes here
+	bool stereo = voiceMgmt.isStereoEnabled();
+	float ch1, ch2;
 	for (int i = 0; i < sampleFrames; i++)
 	{
 		voiceMgmt.calculateNext();
-		const float value = voiceMgmt.getValue();
-		outputs[0][i] = value;
-		/*for (int channel = 0; channel < 2; channel++)
-		{
-			outputs[channel][i] = value;
-		}*/
+		voiceMgmt.getValue(&ch1, &ch2);
+		outputs[0][i] = ch1;
+		if (stereo)
+			outputs[1][i] = ch2;
 	}
-	memcpy(outputs[1], outputs[0], sampleFrames * sizeof(float));
+	if (!stereo)
+		memcpy(outputs[1], outputs[0], sampleFrames * sizeof(float));
 }

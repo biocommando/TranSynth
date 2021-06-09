@@ -58,6 +58,14 @@ float SubSynthParams::getDistortion()
 {
 	return params[10].getValue();
 }
+float SubSynthParams::getWtMix()
+{
+	return params[11].getValue();
+}
+float SubSynthParams::getWtWin()
+{
+	return params[12].getValue();
+}
 
 CallbackUpdatable *SubSynthParams::setTriAmount()
 {
@@ -102,6 +110,14 @@ CallbackUpdatable *SubSynthParams::setVolume()
 CallbackUpdatable *SubSynthParams::setDistortion()
 {
 	return &params[10];
+}
+CallbackUpdatable *SubSynthParams::setWtMix()
+{
+	return &params[11];
+}
+CallbackUpdatable *SubSynthParams::setWtWin()
+{
+	return &params[12];
 }
 
 
