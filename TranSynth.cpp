@@ -131,6 +131,7 @@ void TranSynth::open()
 
 	addParameter("Stereo unison detune", "Stereo", createId(PARAM_STEREO_UNISON_DETUNE), voiceMgmt.getStereoEffectUpdater(), 0);
 
+	addParameter("Wavetable type", "Wavetbl", createId(PARAM_WT_TYPE), voiceMgmt.getWtTypeUpdater());
 	addParameter("Wavetable position", "WtblPos", createId(PARAM_WT_POS), voiceMgmt.getWtPosUpdater());
 
 	isSynth(true);
@@ -143,18 +144,32 @@ TranSynth::~TranSynth()
 
 VstInt32 TranSynth::getChunk(void **data, bool isPreset)
 {
-	char header[] = "WX";
-	header[1] = voiceMgmt.getWavetableId();
-	return parameterHolder.serialize((char **)data, header, 2);
+	char header[] = "HssVvv";
+	short hdrSize = 1 + sizeof(short) + 1 + 2;
+	memcpy(header + 1, &hdrSize, sizeof(short));
+	header[4] = MAJOR_VERSION;
+	header[5] = MINOR_VERSION;
+	return parameterHolder.serialize((char **)data, header, hdrSize);
 }
 
 VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
 {
 	const auto buf = (char *)data;
-	if (buf[0] == 'W')
+	if (buf[0] == 'H') // Header present
 	{
-		voiceMgmt.loadWavetable(buf[1]);
-		parameterHolder.deserialize(buf + 2);
+		short hdrSize;
+		memcpy(&hdrSize, buf + 1, sizeof(short));
+		const auto header = buf + 1 + sizeof(short);
+		int versionMajor = -1; // unknown version
+		int versionMinor = -1;
+		if (header[0] == 'V') // Version
+		{
+			versionMajor = header[1];
+			versionMinor = header[2];
+			logf("version maj", versionMajor);
+			logf("version min", versionMinor);
+		}
+		parameterHolder.deserialize(buf + hdrSize);
 	}
 	else
 	{

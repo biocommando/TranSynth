@@ -158,9 +158,11 @@ void SubSynthParams::paramValuesFromInterpolatedParams(SubSynthParams &p1, SubSy
 
 void SubSynthParams::fromParams(SubSynthParams &p)
 {
+	bool updated = false;
 	for (int i = 0; i < NUM_SUB_SYNTH_PARAMS; i++)
 	{
-		params[i].setValueBypassingCallback(p.params[i].getValue());
+		updated = params[i].setValueBypassingCallback(p.params[i].getValue()) || updated;
 	}
-	paramsChanged();
+	if (updated)
+		paramsChanged();
 }

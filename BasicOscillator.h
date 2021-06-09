@@ -23,5 +23,5 @@ public:
 	void setFrequency(float f_Hz);
 	void setWaveTableParams(float pos, float window);
 	void setSamplerate(int rate);
-	void randomizePhase();
+	void randomizePhase(float rndAmount = 1);
 };

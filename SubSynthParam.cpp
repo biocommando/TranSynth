@@ -26,8 +26,13 @@ float SubSynthParam::getValue()
 	return value;
 }
 
-void SubSynthParam::setValueBypassingCallback(float value)
+bool SubSynthParam::setValueBypassingCallback(float value)
 {
-	this->value = value;
+	if (this->value != value)
+	{
+		this->value = value;
+		return true;
+	}
+	return false;
 }
 

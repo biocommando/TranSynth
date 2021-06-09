@@ -21,6 +21,7 @@ class SubSynth : CallbackUpdatable
 	float wtPos = 0;
 	float distort(float value);
 	float getOscValue(enum OscType osc);
+	bool updated = false;
 public:
 	SubSynthParams *getParams();
 	SubSynth();

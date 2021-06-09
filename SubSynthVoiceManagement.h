@@ -35,7 +35,36 @@ public:
 	}
 };
 
-class SubSynthVoiceManagement : CallbackUpdatable, ADSRUpdater
+class WtGenerator
+{
+public:
+	virtual void generateWavetable(int id) = 0;
+	virtual ~WtGenerator() {}
+};
+
+class WtUpdater : public CallbackUpdatable
+{
+	int value = -1;
+	WtGenerator *gen = nullptr;
+public:
+	void init(WtGenerator *gen)
+	{
+		this->gen = gen;
+		onUpdateWithValue(0);
+	}
+
+	void onUpdateWithValue(float value)
+	{
+		int newVal = value * 0.99 * 8;
+		if (newVal != this->value)
+		{
+			this->value = newVal;
+			gen->generateWavetable(newVal);
+		}
+	}
+};
+
+class SubSynthVoiceManagement : public WtGenerator, CallbackUpdatable, ADSRUpdater
 {
 	SubSynthVoice voices[SS_VOICEMNGMT_VOICES];
 	SubSynthParams params[SS_VOICEMNGMT_PARAMS];
@@ -47,12 +76,12 @@ class SubSynthVoiceManagement : CallbackUpdatable, ADSRUpdater
 	long nextCounter();
 	void activateVoice(int voiceIndex, float midiNote, int noteNumber, int velocity, int channel);
 	long counter;
-	int wtId = 1;
 
 	GenericCallbackUpdatable velocityToVolume;
 	GenericCallbackUpdatable velocityToFilter;
 	GenericCallbackUpdatable stereoEffect;
 	GenericCallbackUpdatable wtPos;
+	WtUpdater wtUpdater;
 
 	void noteOn(float midiNote, int noteNumber, int velocity, int channel);
 public:
@@ -76,9 +105,9 @@ public:
 	CallbackUpdatable *getVelocityToVolumeUpdater();
 	CallbackUpdatable *getStereoEffectUpdater();
 	CallbackUpdatable *getWtPosUpdater();
+	CallbackUpdatable *getWtTypeUpdater();
 
-	int getWavetableId();
-	void loadWavetable(int wtId);
+	void generateWavetable(int id);
 
 	bool isStereoEnabled();
 

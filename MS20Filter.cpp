@@ -32,7 +32,7 @@ MS20Filter::~MS20Filter()
 {
 }
 
-float MS20Filter::calculate(float input)
+float MS20Filter::calculate(float x)
 {
 	integratedCutoff = integratedCutoff + (cutoff - integratedCutoff) * 0.01;
 	if (++sampleIdx == 15)
@@ -40,8 +40,7 @@ float MS20Filter::calculate(float input)
 		sampleIdx = 0;
 		update();
 	}
-	float x = (float)input;
-	float y = (Ax * xm2 + Bx * xm1 + Cx * x - Ay * ym2 - By * ym1) * iCy;
+	const float y = (Ax * xm2 + Bx * xm1 + Cx * x - Ay * ym2 - By * ym1) * iCy;
 	// saturation
 	if (x < -1)
 		x = -1;

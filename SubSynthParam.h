@@ -9,7 +9,7 @@ class SubSynthParam :
 public:
 	void onUpdateWithValue(float value);
 	float getValue();
-	void setValueBypassingCallback(float value);
+	bool setValueBypassingCallback(float value);
 
 	SubSynthParam();
 	~SubSynthParam();

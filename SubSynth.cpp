@@ -9,7 +9,8 @@ SubSynth::SubSynth() : osc1(44100),
 
 void SubSynth::onUpdate()
 {
-	updateParams();
+	updated = true;
+	//updateParams();
 }
 
 void SubSynth::setWavetable(float *wt)
@@ -52,8 +53,12 @@ void SubSynth::updateParams()
 
 void SubSynth::setWavetablePos(float pos)
 {
-	wtPos = pos;
-	updateParams();
+	if (wtPos != pos)
+	{
+		wtPos = pos;
+		updated = true;
+	//updateParams();
+	}
 }
 
 void SubSynth::setNoteFrequency(float midiNote)
@@ -62,7 +67,8 @@ void SubSynth::setNoteFrequency(float midiNote)
 	filter.reset();
 	osc1.randomizePhase();
 	osc2.randomizePhase();
-	updateParams();
+	updated = true;
+	//updateParams();
 }
 
 SubSynthParams *SubSynth::getParams()
@@ -92,6 +98,11 @@ float SubSynth::getOscValue(enum OscType osc)
 
 void SubSynth::calculateNext()
 {
+	if (updated)
+	{
+		updateParams();
+		updated = false;
+	}
 	lfo.calculateNext();
 	const float lfoValue = lfo.getValue(OSC_TRIANGLE);
 

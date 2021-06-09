@@ -14,7 +14,7 @@ BasicOscillator::BasicOscillator(int sampleRate) : phase(0), hzToF(1.0f / (float
 int logged=3;
 void BasicOscillator::setWaveTableParams(float pos, float window)
 {
-	wtWindow = 2 + window * 300;
+	wtWindow = 2 + window * (wtSize - 2);
 	wtPos = pos * (wtSize - wtWindow - 1);
 	if (!logged) return;
 	logged--;
@@ -37,9 +37,10 @@ void BasicOscillator::setSamplerate(int rate)
 	hzToF = 1.0f / (float)rate;
 }
 
-void BasicOscillator::randomizePhase()
+void BasicOscillator::randomizePhase(float rndAmount)
 {
 	phase = (float)(rand() % 100000) * 0.00001f;
+	phase *= rndAmount;
 }
 
 inline float sin1(float phase)

@@ -4,6 +4,9 @@
 #include "ParameterHolder.h"
 #include "SubSynthVoiceManagement.h"
 
+#define MAJOR_VERSION 0
+#define MINOR_VERSION 0
+
 #define PARAM_WITH_GROUP(group, param) ((group)*200 + (param))
 #define PARAM_TRI 0
 #define PARAM_SAW 1
@@ -26,7 +29,8 @@
 #define PARAM_VEL_TO_FILTER 4
 #define PARAM_STEREO_UNISON_DETUNE 5
 #define PARAM_WT_POS 6
-#define NUM_PARAMS 59
+#define PARAM_WT_TYPE 7
+#define NUM_PARAMS 60
 
 class TranSynth : public AudioEffectX
 {
