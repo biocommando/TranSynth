@@ -56,7 +56,7 @@ public:
 
     void onUpdateWithValue(float value)
     {
-        int newVal = value * 0.99 * 8;
+        int newVal = value * 0.99 * 16;
         if (newVal != this->value)
         {
             this->value = newVal;

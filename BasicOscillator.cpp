@@ -9,18 +9,12 @@ extern void logf(const char*, float);
 BasicOscillator::BasicOscillator(int sampleRate) : phase(0), hzToF(1.0f / (float)sampleRate),
                                                    frequency(0), wtPos(0), wtWindow(0)
 {
-    randomizePhase();
 }
-int logged=3;
+
 void BasicOscillator::setWaveTableParams(float pos, float window)
 {
     wtWindow = 2 + window * (wtSize - 2);
     wtPos = pos * (wtSize - wtWindow - 1);
-    if (!logged) return;
-    logged--;
-    logf("wtWindow", wtWindow);
-    logf("wtPos", wtPos);
-    logf("pos", pos);
 }
 
 void BasicOscillator::setWavetable(float *wt)

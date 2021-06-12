@@ -1,6 +1,7 @@
 #include "SubSynthVoiceManagement.h"
+#include <vector>
 #include <stdio.h>
-#include <windows.h>
+#include <math.h>
 
 constexpr int wtSize = 10000;
 float wt[wtSize];
@@ -50,15 +51,184 @@ SubSynthVoiceManagement::SubSynthVoiceManagement() : counter(0)
     }
 }
 
+void generateBasicWavetable(enum OscType t, float vol)
+{
+    BasicOscillator gen;
+    gen.setFrequency(50);
+    gen.randomizePhase(0);
+    for (int i = 0; i < wtSize; i++)
+    {
+        gen.calculateNext();
+        wt[i] = gen.getValue(t) * vol;
+    }
+}
+
+void generateFmWavetable(float ratioOp2, float mod2To1Amt, float ratioOp3, float mod3To2Amt)
+{
+    float p0 = 0, p1 = 0, p2 = 0;
+    const float f0 = 50, f1 = ratioOp2 * 50, f2 = ratioOp3 * 50;
+    const float incrementBase = asin(1) * 4 / 44100;
+
+    const float vol = sqrt(2);
+
+    float avg = 0;
+    for (int i = 0; i < wtSize; i++)
+    {
+        p0 += incrementBase * f0;
+        p1 += incrementBase * f1;
+        p2 += incrementBase * f2;
+        const float v2 = sin(p2);
+        p1 += v2 * mod3To2Amt;
+        const float v1 = sin(p1);
+        p0 += v1 * mod2To1Amt;
+        const float v0 = sin(p0);
+
+        wt[i] = v0 * vol;
+        avg += wt[i];
+    }
+
+    avg /= wtSize;
+
+    // Remove DC offset
+    if (fabs(avg) > 1e-6)
+    {
+        for (int i = 0; i < wtSize; i++)
+        {
+            wt[i] -= avg;
+        }
+    }
+}
+
+void generateAdditWavetable(const float *freqs, const float *amplitudes)
+{
+    std::vector<float> phases;
+    float volmult = 0;
+    for (int i = 0; freqs[i] > 0; i++)
+    {
+        volmult += amplitudes[i];
+        phases.push_back(0);
+    }
+    const float vol = sqrt(2) / volmult;
+    const float incrementBase = asin(1) * 4 / 44100;
+    for (int i = 0; i < wtSize; i++)
+    {
+        float val = 0;
+        for (int j = 0; j < phases.size(); j++)
+        {
+            val += sin(phases[j]) * amplitudes[j];
+            phases[j] += freqs[j] * incrementBase;
+        }
+        wt[i] = val * vol;
+    }
+}
+
+void generateSweepWavetable(enum OscType t)
+{
+    const float vol = sqrt(2);
+
+    BasicOscillator gen;
+    gen.randomizePhase(0);
+    float freq = 50;
+    const float speed = 50.0 / wtSize;
+    for (int i = 0; i < wtSize; i++)
+    {
+        gen.setFrequency(freq);
+        freq += speed;
+        gen.calculateNext();
+        wt[i] = gen.getValue(t) * vol;
+    }
+}
+
+void generatePwmWavetable()
+{
+    int phase = 0;
+    const int phaseMax = 44100 / 50;
+    const int pwInc = phaseMax / (2 * wtSize / phaseMax);
+    int pw = 10;
+    for (int i = 0; i < wtSize; i++)
+    {
+        wt[i] = phase < pw ? 1 : -1;
+        if (++phase == phaseMax)
+        {
+            phase = 0;
+            pw += pwInc;
+        }
+    }
+}
+
 void SubSynthVoiceManagement::generateWavetable(int id)
 {
-    BasicOscillator gen(44100);
+    switch (id)
+    {
+    case 0:
+        generateBasicWavetable(OSC_SINE, sqrt(2));
+        break;
+    case 1:
+        generateBasicWavetable(OSC_TRIANGLE, sqrt(3));
+        break;
+    case 2:
+        generateBasicWavetable(OSC_SQUARE, 1);
+        break;
+    case 3:
+        generateBasicWavetable(OSC_SAW, sqrt(3));
+        break;
+    case 4:
+        generateFmWavetable(4, 0.02, 1, 0.05);
+        break;
+    case 5:
+        generateFmWavetable(6, 0.02, 8, 0.1);
+        break;
+    case 6:
+        generateFmWavetable(3, 0.03, 7, 0.1);
+        break;
+    case 7:
+        generateFmWavetable(sqrt(3), 0.05, 0.5, 0.1);
+        break;
+    case 8:
+    {
+        const float freqs[] = {50, 100, 150, 200, -1};
+        const float amplitudes[] = {1, 0.5, 0.5, 0.25};
+        generateAdditWavetable(freqs, amplitudes);
+    }
+    break;
+    case 9:
+    {
+        const float freqs[] = {50, 75, 150, 250, -1};
+        const float amplitudes[] = {1, 0.5, 1, 0.7};
+        generateAdditWavetable(freqs, amplitudes);
+    }
+    break;
+    case 10:
+    {
+        const float freqs[] = {50, 200, 400, 1200, -1};
+        const float amplitudes[] = {1, 0.8, 0.6, 0.4};
+        generateAdditWavetable(freqs, amplitudes);
+    }
+    break;
+    case 11:
+    {
+        const float freqs[] = {50, 52, -1};
+        const float amplitudes[] = {1, 1};
+        generateAdditWavetable(freqs, amplitudes);
+    }
+    break;
+    case 12:
+        generateSweepWavetable(OSC_SINE);
+        break;
+    case 13:
+        generateSweepWavetable(OSC_SAW);
+        break;
+    case 14:
+        generateSweepWavetable(OSC_SQUARE);
+        break;
+    case 15:
+        generatePwmWavetable();
+        break;
+    }
+    /*BasicOscillator gen(44100);
     BasicOscillator gen2(44100);
     BasicOscillator gen3(44100);
     gen.setFrequency(50);
-    gen.randomizePhase(0);
-    gen2.randomizePhase(0);
-    gen3.randomizePhase(0);
 
     bool useFm = false;
 
@@ -97,9 +267,8 @@ void SubSynthVoiceManagement::generateWavetable(int id)
             gen2.setFrequency(gen2Freq + gen2Freq * gen3.getValue(OSC_SINE));
             gen2.calculateNext();
             gen.setFrequency(50 + 50 * gen2.getValue(OSC_SINE));
-            //wt[i] = wt[i] * gen2.getValue(OSC_TRIANGLE);
         }
-    }
+    }*/
 }
 
 SubSynthVoiceManagement::~SubSynthVoiceManagement()

@@ -15,7 +15,7 @@ private:
     int wtPos, wtWindow;
     float *wt = nullptr;
 public:
-    BasicOscillator(int sampleRate);
+    BasicOscillator(int sampleRate = 44100);
     ~BasicOscillator();
     void calculateNext();
     void setWavetable(float *wt);
