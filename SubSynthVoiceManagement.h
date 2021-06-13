@@ -56,7 +56,10 @@ public:
 
     void onUpdateWithValue(float value)
     {
-        int newVal = value * 0.99 * 16;
+        const int numValues = 16;
+        int newVal = value * numValues;
+        if (newVal >= numValues)
+            newVal = numValues - 1;
         if (newVal != this->value)
         {
             this->value = newVal;

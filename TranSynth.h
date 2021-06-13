@@ -20,7 +20,7 @@
 #define PARAM_VOLUME 9
 #define PARAM_DISTORTION 10
 #define PARAM_WT_MIX 11
-#define PARAM_WT_WIN 13
+#define PARAM_WT_WIN 12
 #define GROUPLESS_PARAM(param) (10000 + (param))
 #define PARAM_ATTACK 0
 #define PARAM_DECAY 1
@@ -38,6 +38,8 @@ class TranSynth : public AudioEffectX
 private:
     ParameterHolder parameterHolder;
     SubSynthVoiceManagement voiceMgmt;
+    char *chunk = nullptr;
+    char curProgramName[24];
 
     void addParameter(const std::string &name, const std::string &shortName, int id,
                       CallbackUpdatable *cu, float defaultValue = 0);
@@ -51,6 +53,10 @@ public:
     void processReplacing(float **inputs, float **outputs, VstInt32 sampleFrames);
     float getParameter(VstInt32 index);
     void setParameter(VstInt32 index, float value);
+    float getParameterById(int id);
+    void setParameterById(int id, float value);
+    int getIdByIndex(int index);
+    int getIndexById(int id);
     void getParameterName(VstInt32 index, char *label);
     void getParameterDisplay(VstInt32 index, char *text);
     void getParameterLabel(VstInt32 index, char *label);
@@ -60,3 +66,7 @@ public:
     VstInt32 processEvents(VstEvents *events);
     void open();
 };
+
+int createId(int group, int param);
+
+int createId(int param);

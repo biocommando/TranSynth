@@ -1,6 +1,7 @@
 // This is the main DLL file.
 
 #include "TranSynth.h"
+#include "TranSynthGui.h"
 #include <string>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,12 +13,6 @@ AudioEffect *createEffectInstance(audioMasterCallback audioMaster)
     return new TranSynth(audioMaster);
 }
 
-TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS)
-{
-    setNumInputs(2);         // stereo in
-    setNumOutputs(2);        // stereo out
-    setUniqueID(-809164751); // identify
-}
 //#define DEBUG_LOG
 void log(const char *s)
 {
@@ -50,14 +45,14 @@ int createId(int param)
     return createId(-1, param);
 }
 
-void TranSynth::addParameter(const std::string &name, const std::string &shortName, int id,
-                             CallbackUpdatable *cu, float defaultValue)
+TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS)
 {
-    parameterHolder.addParameter(PluginParameter(name, shortName, id, cu, defaultValue));
-}
+    setNumInputs(2);         // stereo in
+    setNumOutputs(2);        // stereo out
+    setUniqueID(-809164751); // identify
+    isSynth(true);
+    programsAreChunks();
 
-void TranSynth::open()
-{
     srand((int)time(NULL));
     int sampleRate = (int)this->getSampleRate();
     voiceMgmt.setSampleRate(sampleRate);
@@ -134,23 +129,54 @@ void TranSynth::open()
     addParameter("Wavetable position", "WtblPos", createId(PARAM_WT_POS), voiceMgmt.getWtPosUpdater());
 
     addParameter("Volume", "Volume", createId(PARAM_PATCH_VOLUME), voiceMgmt.getVolumeUpdater(), 1.0f);
+}
 
-    isSynth(true);
-    programsAreChunks();
+void TranSynth::addParameter(const std::string &name, const std::string &shortName, int id,
+                             CallbackUpdatable *cu, float defaultValue)
+{
+    parameterHolder.addParameter(PluginParameter(name, shortName, id, cu, defaultValue));
+}
+
+void TranSynth::open()
+{
+    setEditor(new TranSynthGui(this));
 }
 
 TranSynth::~TranSynth()
 {
+    if (chunk)
+    {
+        free(chunk);
+    }
+
+    FILE *f = fopen("D:\\transyn-latest-pgm.txt", "w");
+    fprintf(f, "{ NUMBER\n$ NAME\n");
+
+    for (int i = 0; i < NUM_PARAMS; i++)
+    {
+        auto p = parameterHolder.getParameterByIndex(i);
+        fprintf(f, "+ %d %f\n", p->getId(), p->getValue());
+    }
+    fprintf(f, "}\n");
+    fclose(f);
 }
 
 VstInt32 TranSynth::getChunk(void **data, bool isPreset)
 {
+    logf("getChunk", curProgram);
+    if (chunk)
+    {
+        free(chunk);
+    }
     char header[] = "HssVvv";
     short hdrSize = 1 + sizeof(short) + 1 + 2;
     memcpy(header + 1, &hdrSize, sizeof(short));
     header[4] = MAJOR_VERSION;
     header[5] = MINOR_VERSION;
-    return parameterHolder.serialize((char **)data, header, hdrSize);
+
+    auto ret = parameterHolder.serialize((char **)data, header, hdrSize);
+    chunk = *(char **)data;
+    return ret;
 }
 
 VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
@@ -197,6 +223,36 @@ void TranSynth::setParameter(VstInt32 index, float value)
     }
     param->setValue(value);
 }
+
+float TranSynth::getParameterById(int id)
+{
+    auto p = parameterHolder.getParameterById(id);
+    return p ? p->getValue() : 0;
+}
+void TranSynth::setParameterById(int id, float value)
+{
+    auto p = parameterHolder.getParameterById(id);
+    if (p)
+        p->setValue(value);
+}
+int TranSynth::getIdByIndex(int index)
+{
+    auto p = parameterHolder.getParameterByIndex(index);
+    return p ? p->getId() : -1;
+}
+int TranSynth::getIndexById(int id)
+{
+    auto p = parameterHolder.getParameterById(id);
+    for (int i = 0; i < NUM_PARAMS; i++)
+    {
+        if (p == parameterHolder.getParameterByIndex(i))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 void TranSynth::getParameterName(VstInt32 index, char *label)
 {
     PluginParameter *param = parameterHolder.getParameterByIndex(index);
