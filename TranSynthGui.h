@@ -38,6 +38,8 @@ constexpr int tagGlobalParam = 202;
 
 extern void logf(const char *, float);
 
+extern CColor gold;
+
 extern char workDir[1024];
 extern void resolveWorkDir();
 
@@ -163,7 +165,7 @@ class TranSynthGui : public AEffGUIEditor, public CControlListener
 
     Knob *addKnob(CFrame *xframe, int x, int y, int id, int tag)
     {
-        const CColor cBg = kBlackCColor, cFg = kWhiteCColor;
+        const CColor cBg = kBlackCColor, cFg = gold;
         GRID_RECT(knobRect, x, y, KNOB_SIZE, KNOB_SIZE);
         auto knob = new Knob(knobRect, this, tag, knobBackground, nullptr, id);
         ADD_TEXT("00", x, y + 0.7, KNOB_SIZE, TEXT_H, knob->label = label);
@@ -185,7 +187,7 @@ public:
     bool open(void *ptr)
     {
         CRect frameSize(0, 0, GRID_X(18) + LEFT_MARGIN, GRID_Y(9));
-        CColor cBg = kBlackCColor, cFg = kWhiteCColor;
+        CColor cBg = kBlackCColor, cFg = gold;
         ERect *wSize;
         getRect(&wSize);
 
@@ -249,14 +251,6 @@ public:
                 auto knob = addKnob(xframe, 2 + j + xOffset, i + 1 + yOffset, id, tagGroupedParam);
                 knob->group = j;
                 knob->param = groupedParams[i];
-                /*GRID_RECT(knobRect, 2 + j + xOffset, i + 1 + yOffset, KNOB_SIZE, KNOB_SIZE);
-                auto knob = new Knob(knobRect, this, 100 + i * 5 + j, knobBackground, nullptr, id);
-                ADD_TEXT("00", 2 + j + xOffset, i + 1.7 + yOffset, KNOB_SIZE, 16, knob->label = label);
-                xframe->addView(knob);
-                knob->setValue(synth()->getParameterById(id));
-                knob->group = j;
-                knob->param = i;
-                knobs.push_back(knob);*/
             }
         }
 
@@ -328,7 +322,6 @@ public:
     {
         if (!frame)
             return;
-        //const auto id = synth()->getIdByIndex(index);
         for (int i = knobs.size() - 1; i >= 0; i--)
         {
             if (knobs[i]->paramId == id)
@@ -337,7 +330,6 @@ public:
                 return;
             }
         }
-        //parameterList->setCurrent(0);
     }
 
     void valueChanged(CControl *control)
@@ -350,15 +342,6 @@ public:
         {
             setLinkModeFromListIdx();
         }
-        /*if (tag == tagParamSelect)
-        {
-            const auto param = parameterList->getCurrentIndex() - 1;
-            for (int i = 0; i < 4; i++)
-            {
-                dynamicKnobs[i]->setValue(
-                    synth()->getParameterById(createId(i, param)));
-            }
-        }*/
         else if (tag == tagPresetList)
         {
             auto presetMgr = synth()->getPresetManager();
@@ -381,6 +364,7 @@ public:
             }
             else // save as new
             {
+                presetMgr->refresh();
                 const auto name = std::string("User program ") + std::to_string(presetMgr->presetNames.size());
                 presetMgr->saveProgram(presetMgr->presetNames.size(), name);
                 presetNumber = presetMgr->presetNames.size();

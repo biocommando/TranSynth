@@ -42,6 +42,7 @@ private:
     void openFile(int rw);
     void closeFile();
     bool readProgram(int number, std::string &name, bool readNameOnly, FILE *copyToTmp = nullptr);
+
 public:
     std::vector<std::string> presetNames;
 
@@ -51,8 +52,13 @@ public:
     }
 
     void readProgram(int number);
-    
+
     void saveProgram(int number, const std::string &name);
+
+    void refresh()
+    {
+        init();
+    }
 };
 
 class TranSynth : public AudioEffectX
