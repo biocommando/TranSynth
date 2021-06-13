@@ -33,10 +33,33 @@
 #define PARAM_PATCH_VOLUME 8
 #define NUM_PARAMS 61
 
+class PresetManager
+{
+private:
+    ParameterHolder &parameterHolder;
+    FILE *f = nullptr;
+    void init();
+    void openFile(int rw);
+    void closeFile();
+    bool readProgram(int number, std::string &name, bool readNameOnly, FILE *copyToTmp = nullptr);
+public:
+    std::vector<std::string> presetNames;
+
+    PresetManager(ParameterHolder &h) : parameterHolder(h)
+    {
+        init();
+    }
+
+    void readProgram(int number);
+    
+    void saveProgram(int number, const std::string &name);
+};
+
 class TranSynth : public AudioEffectX
 {
 private:
     ParameterHolder parameterHolder;
+    PresetManager presetManager;
     SubSynthVoiceManagement voiceMgmt;
     char *chunk = nullptr;
     char curProgramName[24];
@@ -58,6 +81,7 @@ public:
     int getIdByIndex(int index);
     int getIndexById(int id);
     void getParameterName(VstInt32 index, char *label);
+    void getParameterLongName(int id, char *label);
     void getParameterDisplay(VstInt32 index, char *text);
     void getParameterLabel(VstInt32 index, char *label);
     bool getEffectName(char *name);
@@ -65,6 +89,7 @@ public:
     bool getVendorString(char *text);
     VstInt32 processEvents(VstEvents *events);
     void open();
+    PresetManager *getPresetManager() { return &presetManager; }
 };
 
 int createId(int group, int param);

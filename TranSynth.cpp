@@ -7,6 +7,27 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <windows.h>
+
+char workDir[1024] = {0};
+void resolveWorkDir()
+{
+    if (workDir[0])
+        return;
+    // work out the resource directory
+    // first we get the DLL path from windows API
+    extern void *hInstance;
+    wchar_t workDirWc[1024];
+    GetModuleFileName((HMODULE)hInstance, workDirWc, 1024);
+    wcstombs(workDir, workDirWc, 1024);
+    // let's get rid of the DLL file name
+    for (int i = strlen(workDir) - 1; i >= 0; i--)
+        if (workDir[i] == '\\')
+        {
+            workDir[i] = 0;
+            break;
+        }
+}
 
 AudioEffect *createEffectInstance(audioMasterCallback audioMaster)
 {
@@ -45,7 +66,8 @@ int createId(int param)
     return createId(-1, param);
 }
 
-TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS)
+TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS),
+                                                        presetManager(parameterHolder)
 {
     setNumInputs(2);         // stereo in
     setNumOutputs(2);        // stereo out
@@ -63,55 +85,55 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
         std::string groupPrefix = std::to_string(group + 1) + ":";
         auto params = voiceMgmt.getParams(group);
 
-        auto name = groupPrefix + "Tri amount";
+        auto name = "TRI Amount";
         auto shortName = groupPrefix + "Tri";
         addParameter(name, shortName, createId(group, PARAM_TRI), params->setTriAmount());
 
-        name = groupPrefix + "Saw amount";
+        name = "SAW Amount";
         shortName = groupPrefix + "Saw";
         addParameter(name, shortName, createId(group, PARAM_SAW), params->setSawAmount(), 1);
 
-        name = groupPrefix + "Sqr amount";
+        name = "SQR Amount";
         shortName = groupPrefix + "Sqr";
         addParameter(name, shortName, createId(group, PARAM_SQR), params->setSqrAmount());
 
-        name = groupPrefix + "Wave amount";
+        name = "Wavetable Amount";
         shortName = groupPrefix + "Wt";
         addParameter(name, shortName, createId(group, PARAM_WT_MIX), params->setWtMix());
 
-        name = groupPrefix + "Wave window";
+        name = "Wavetable Window";
         shortName = groupPrefix + "WtW";
         addParameter(name, shortName, createId(group, PARAM_WT_WIN), params->setWtWin());
 
-        name = groupPrefix + "Detune";
+        name = "Detune";
         shortName = groupPrefix + "Dtn";
         addParameter(name, shortName, createId(group, PARAM_DETUNE), params->setDetuneAmount());
 
-        name = groupPrefix + "Cutoff";
+        name = "Filter Cutoff";
         shortName = groupPrefix + "Cut";
         addParameter(name, shortName, createId(group, PARAM_CUTOFF), params->setFilterCutoff(), 1);
 
-        name = groupPrefix + "Resonance";
+        name = "Filter Resonance";
         shortName = groupPrefix + "Res";
         addParameter(name, shortName, createId(group, PARAM_RESONANCE), params->setFilterResonance());
 
-        name = groupPrefix + "Distortion";
+        name = "Distortion";
         shortName = groupPrefix + "Dist";
         addParameter(name, shortName, createId(group, PARAM_DISTORTION), params->setDistortion());
 
-        name = groupPrefix + "LFO frequency";
+        name = "LFO Frequency";
         shortName = groupPrefix + "LFO-f";
         addParameter(name, shortName, createId(group, PARAM_LFO_FREQ), params->setLfoFrequency(), 0.2f);
 
-        name = groupPrefix + "LFO to pitch";
+        name = "LFO to Pitch";
         shortName = groupPrefix + "ModPt";
         addParameter(name, shortName, createId(group, PARAM_LFO_TO_PITCH), params->setLfoToPitchAmount());
 
-        name = groupPrefix + "LFO to filter";
+        name = "LFO to Filter";
         shortName = groupPrefix + "ModFl";
         addParameter(name, shortName, createId(group, PARAM_LFO_TO_CUTOFF), params->setLfoToCutoffAmount());
 
-        name = groupPrefix + "Volume";
+        name = "Volume";
         shortName = groupPrefix + "Vol";
         addParameter(name, shortName, createId(group, PARAM_VOLUME), params->setVolume(), volumes[group]);
     }
@@ -144,7 +166,7 @@ void TranSynth::open()
 
 TranSynth::~TranSynth()
 {
-    if (chunk)
+    /*if (chunk)
     {
         free(chunk);
     }
@@ -158,7 +180,7 @@ TranSynth::~TranSynth()
         fprintf(f, "+ %d %f\n", p->getId(), p->getValue());
     }
     fprintf(f, "}\n");
-    fclose(f);
+    fclose(f);*/
 }
 
 VstInt32 TranSynth::getChunk(void **data, bool isPreset)
@@ -222,6 +244,10 @@ void TranSynth::setParameter(VstInt32 index, float value)
         return;
     }
     param->setValue(value);
+    if (editor)
+    {
+        ((TranSynthGui *)editor)->setParameter(param->getId(), value);
+    }
 }
 
 float TranSynth::getParameterById(int id)
@@ -262,6 +288,14 @@ void TranSynth::getParameterName(VstInt32 index, char *label)
     }
     param->getShortName(label);
 }
+
+void TranSynth::getParameterLongName(int id, char *label)
+{
+    auto p = parameterHolder.getParameterById(id);
+    if (p)
+        p->getName(label, 32);
+}
+
 void TranSynth::getParameterDisplay(VstInt32 index, char *text)
 {
     PluginParameter *param = parameterHolder.getParameterByIndex(index);
@@ -331,4 +365,121 @@ void TranSynth::processReplacing(float **inputs, float **outputs, VstInt32 sampl
     }
     if (!stereo)
         memcpy(outputs[1], outputs[0], sampleFrames * sizeof(float));
+}
+
+bool PresetManager::readProgram(int number, std::string &name, bool readNameOnly, FILE *copyToTmp)
+{
+    fseek(f, 0, SEEK_SET);
+    char buf[256];
+    bool pgFound = false;
+    name.assign("");
+    while (!feof(f))
+    {
+        fgets(buf, sizeof(buf), f);
+        char cmd = 0;
+        int id = 0;
+        float value = 0;
+        sscanf(buf, "%c %d %f", &cmd, &id, &value);
+        if (cmd == '{' && id == number)
+        {
+            pgFound = true;
+        }
+        if (!pgFound)
+            continue;
+
+        if (copyToTmp)
+            fprintf(copyToTmp, "%s", buf);
+
+        if (cmd == '+' && !readNameOnly && !copyToTmp)
+        {
+            auto p = parameterHolder.getParameterById(id);
+            if (p)
+                p->setValue(value);
+        }
+        if (cmd == '$')
+        {
+            buf[strlen(buf) - 1] = 0;
+            name.assign(&buf[2]);
+            if (readNameOnly)
+                break;
+        }
+
+        if (cmd == '}')
+            break;
+    }
+    return pgFound;
+}
+
+void PresetManager::init()
+{
+    resolveWorkDir();
+    presetNames.clear();
+    openFile(0);
+    bool pgFound = true;
+    for (int i = 0; pgFound; i++)
+    {
+        std::string name;
+        pgFound = readProgram(i, name, true);
+        if (pgFound)
+            presetNames.push_back(name);
+    }
+    closeFile();
+}
+void PresetManager::openFile(int rw)
+{
+    closeFile();
+    std::string presetFileName = std::string(workDir) + "\\" + "TranSynPresets.dat";
+    f = fopen(presetFileName.c_str(), rw ? "w" : "r");
+}
+
+void PresetManager::closeFile()
+{
+    if (f)
+    {
+        fclose(f);
+        f = nullptr;
+    }
+}
+void PresetManager::readProgram(int number)
+{
+    std::string s;
+    openFile(0);
+    readProgram(number, s, false);
+    closeFile();
+}
+
+void PresetManager::saveProgram(int number, const std::string &name)
+{
+    std::string presetTmpFileName = std::string(workDir) + "\\" + "TranSynPresets.tmp";
+    FILE *tmp = fopen(presetTmpFileName.c_str(), "w");
+
+    openFile(0);
+
+    for (int i = 0; i < presetNames.size(); i++)
+    {
+        if (i != number)
+        {
+            std::string s;
+            readProgram(i, s, false, tmp);
+        }
+    }
+
+    fprintf(tmp, "{ %d\n$ %s\n", number, name.c_str());
+    for (int i = 0; i < NUM_PARAMS; i++)
+    {
+        auto p = parameterHolder.getParameterByIndex(i);
+        fprintf(tmp, "+ %d %f\n", p->getId(), p->getValue());
+    }
+    fprintf(tmp, "}\n");
+    fclose(tmp);
+    closeFile();
+
+    openFile(1);
+    tmp = fopen(presetTmpFileName.c_str(), "r");
+    char ch;
+    while ((ch = fgetc(tmp)) != EOF)
+        fputc(ch, f);
+    fclose(tmp);
+    closeFile();
+    init();
 }

@@ -15,6 +15,5 @@ public:
     int serialize(char **writeBuffer, const char *header, int headerSize);
     std::string serializeToString();
     void deserialize(const char *readBuffer);
-    void readProgram(int number, char *name);
     ~ParameterHolder();
 };
