@@ -91,8 +91,14 @@ float SubSynth::getOscValue(enum OscType osc)
 {
     if (noteFrequency1 == noteFrequency2)
     {
-        return osc1.getValue(osc) * 2;
+        if (osc2MixLevel > 1e-5)
+        {
+            osc2MixLevel *= .9996;
+            return osc1.getValue(osc) + osc2.getValue(osc) * osc2MixLevel;
+        }
+        return osc1.getValue(osc);
     }
+    osc2MixLevel = 1;
     return osc1.getValue(osc) + osc2.getValue(osc);
 }
 

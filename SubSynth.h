@@ -19,6 +19,9 @@ class SubSynth : CallbackUpdatable
     float lfoToCutoff;
     float externalCutoffModulation = 0;
     float wtPos = 0;
+    // This is used to soften the transition from
+    // detuned to no detune situation
+    float osc2MixLevel = 0;
     float distort(float value);
     float getOscValue(enum OscType osc);
     bool updated = false;
