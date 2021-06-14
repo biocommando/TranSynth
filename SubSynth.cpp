@@ -68,6 +68,8 @@ void SubSynth::setNoteFrequency(float midiNote)
     osc1.randomizePhase();
     osc2.randomizePhase();
     updated = true;
+    released = false;
+    osc2MixLevel = 1;
     //updateParams();
 }
 
@@ -98,8 +100,11 @@ float SubSynth::getOscValue(enum OscType osc)
         }
         return osc1.getValue(osc);
     }
-    osc2MixLevel = 1;
-    return osc1.getValue(osc) + osc2.getValue(osc);
+    if (osc2MixLevel < 1 && released)
+        osc2MixLevel *= 1.001;
+    else
+        osc2MixLevel = 1;
+    return osc1.getValue(osc) + osc2.getValue(osc) * osc2MixLevel;
 }
 
 void SubSynth::calculateNext()

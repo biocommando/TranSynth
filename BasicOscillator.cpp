@@ -4,7 +4,7 @@
 #include <math.h>
 constexpr int wtSize = 10000;
 
-extern void logf(const char*, float);
+extern void logf(const char *, float);
 
 BasicOscillator::BasicOscillator(int sampleRate) : phase(0), hzToF(1.0f / (float)sampleRate),
                                                    frequency(0), wtPos(0), wtWindow(0)
@@ -58,9 +58,15 @@ inline float sqr1(float phase)
     return phase < 0.5 ? 1.0f : -1.0f;
 }
 
-inline float wt1(float *wt, float phase, int pos, int window)
+inline float wt1(float *wt, float phase, int pos, int window, float dcFilterState[2])
 {
-    return wt[(int)(pos + window * phase)];
+    const float value = wt[(int)(pos + window * phase)];
+
+    // Remove DC offset
+    dcFilterState[0] = 0.9984 * (value + dcFilterState[0] - dcFilterState[1]);
+    dcFilterState[1] = value;
+
+    return dcFilterState[0];
 }
 
 void BasicOscillator::calculateNext()
@@ -86,7 +92,7 @@ float BasicOscillator::getValue(enum OscType oscType)
     case OSC_SQUARE:
         return sqr1(phase);
     case OSC_WT:
-        return wt1(wt, phase, wtPos, wtWindow);
+        return wt1(wt, phase, wtPos, wtWindow, dcFilterState);
     default:
         return 0;
     }

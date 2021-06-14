@@ -148,6 +148,15 @@ class TranSynthGui : public AEffGUIEditor, public CControlListener
         case 10:
             setLinkMode(0, 1, 0, 1);
             break;
+        case 11:
+            setLinkMode(1, 1, 2, 2); // A-D, S-R
+            break;
+        case 12:
+            setLinkMode(2, 1, 1, 2); // A-R, D-S
+            break;
+        case 13:
+            setLinkMode(1, 2, 1, 2); // A-S, D-R
+            break;
         }
     }
 
@@ -221,6 +230,9 @@ public:
         linkModeList->addEntry(new CMenuItem("A-S-R"));
         linkModeList->addEntry(new CMenuItem("A-R"));
         linkModeList->addEntry(new CMenuItem("D-R"));
+        linkModeList->addEntry(new CMenuItem("A-D, S-R"));
+        linkModeList->addEntry(new CMenuItem("A-R, D-S"));
+        linkModeList->addEntry(new CMenuItem("A-S, D-R"));
 
         xframe->addView(linkModeList);
 
@@ -383,7 +395,7 @@ public:
             {
                 for (int i = 0; i < 4; i++)
                 {
-                    if (i != knob->group && linkMode[i])
+                    if (i != knob->group && linkMode[i] == linkMode[knob->group])
                     {
                         const auto id = createId(i, knob->param);
                         setParameter(id, knob->getValue());

@@ -22,6 +22,7 @@ class SubSynth : CallbackUpdatable
     // This is used to soften the transition from
     // detuned to no detune situation
     float osc2MixLevel = 0;
+    bool released;
     float distort(float value);
     float getOscValue(enum OscType osc);
     bool updated = false;
@@ -33,6 +34,11 @@ public:
     void calculateNext();
     void setExternalCutoffModulation(float value);
     void setWavetablePos(float pos);
+    // When note is released certain parameters may
+    // immediately jump from value to another,
+    // so we need a callback to make the transition
+    // softer
+    void notifyNoteOff() { released = true; }
     void onUpdate();
     float getValue();
     void setSamplerate(int rate);

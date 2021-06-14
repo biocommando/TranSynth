@@ -7,37 +7,6 @@ constexpr int wtSize = 10000;
 float wt[wtSize];
 extern void logf(const char *, float);
 
-/*char workDir[1024] = {0};
-void getWorkDir()
-{
-    if (workDir[0])
-        return;
-    // work out the resource directory
-    // first we get the DLL path from windows API
-    extern void *hInstance;
-    GetModuleFileName((HMODULE)hInstance, workDir, 1024);
-    // let's get rid of the DLL file name
-    for (int i = strlen(workDir) - 1; i >= 0; i--)
-        if (workDir[i] == '\\')
-        {
-            workDir[i] = 0;
-            break;
-        }
-    // add the resource directory to the path
-    // strcat(workDir, "\\wavesynth_resources\\");
-}*/
-
-/*FILE *openFile(const char *name, const char *mode)
-{
-    getWorkDir();
-    char path[1024];
-    sprintf(path, "%s\\%s", workDir, name);
-
-    logf("path", 0);
-    logf(path, 0);
-    return fopen(path, mode);
-}*/
-
 SubSynthVoiceManagement::SubSynthVoiceManagement() : counter(0)
 {
     for (int i = 0; i < 3; i++)
@@ -225,50 +194,6 @@ void SubSynthVoiceManagement::generateWavetable(int id)
         generatePwmWavetable();
         break;
     }
-    /*BasicOscillator gen(44100);
-    BasicOscillator gen2(44100);
-    BasicOscillator gen3(44100);
-    gen.setFrequency(50);
-
-    bool useFm = false;
-
-    enum OscType t;
-    float vol = 1, gen2Freq;
-    if (id == 0 || id >= 4)
-    {
-        t = OSC_SINE;
-        vol = sqrt(2);
-
-        gen2Freq = 50 * id + (id - 4) * 2;
-        gen3.setFrequency(25 * (id - 2));
-    }
-    if (id == 1)
-    {
-        t = OSC_TRIANGLE;
-        vol = sqrt(3);
-    }
-    if (id == 2)
-    {
-        t = OSC_SQUARE;
-    }
-    if (id == 3)
-    {
-        t = OSC_SAW;
-        vol = sqrt(3);
-    }
-    useFm = id >= 4;
-    for (int i = 0; i < wtSize; i++)
-    {
-        gen.calculateNext();
-        wt[i] = gen.getValue(t) * vol;
-        if (useFm)
-        {
-            gen3.calculateNext();
-            gen2.setFrequency(gen2Freq + gen2Freq * gen3.getValue(OSC_SINE));
-            gen2.calculateNext();
-            gen.setFrequency(50 + 50 * gen2.getValue(OSC_SINE));
-        }
-    }*/
 }
 
 SubSynthVoiceManagement::~SubSynthVoiceManagement()

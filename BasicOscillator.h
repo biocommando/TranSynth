@@ -14,6 +14,7 @@ private:
     float phase, frequency, hzToF;
     int wtPos, wtWindow;
     float *wt = nullptr;
+    float dcFilterState[2] = {0,0};
 public:
     BasicOscillator(int sampleRate = 44100);
     ~BasicOscillator();
