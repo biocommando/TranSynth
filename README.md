@@ -17,6 +17,7 @@ wavetable position.
 # License
 
 All my code in this repository is licensed with MIT license terms:
+```
 The MIT License (MIT)
 
 Copyright (c) 2021 Joonas Salonpää
@@ -38,8 +39,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+```
 ---
 VAStateVariableFilter (VAStateVariableFilter.cpp/.h):
+```
 The MIT License (MIT)
 
 Copyright (c) 2015 Jordan Harris
@@ -61,8 +64,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
---
+```
+---
 MoogFilter.h:
+```
 Anyone is free to copy, modify, publish, use, compile, sell, or
 distribute this software, either in source code form or as a compiled
 binary, for any purpose, commercial or non-commercial, and by any
@@ -85,7 +90,8 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 
 For more information, please refer to <http://unlicense.org/>
---
+```
+---
 VST SDK code is BSD-3-clause but the code isn't included in this repository.
 
 # Building
