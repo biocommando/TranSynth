@@ -50,6 +50,8 @@ public:
     virtual ~GenericCallbackUpdatable() {}
 };
 
+constexpr int wtSize = 10000;
+
 class SubSynthVoiceManagement : public ParamUpdateListener, CallbackUpdatable
 {
     SubSynthVoice voices[SS_VOICEMNGMT_VOICES];
@@ -83,6 +85,7 @@ class SubSynthVoiceManagement : public ParamUpdateListener, CallbackUpdatable
     GenericCallbackUpdatable wtUpdater;
     int currentWt = -1;
     void generateWavetable(int id);
+    float wt[wtSize]; // the wavetable samples
 
     void noteOn(float midiNote, int noteNumber, int velocity, int channel);
 

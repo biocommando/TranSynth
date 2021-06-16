@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <math.h>
 
-constexpr int wtSize = 10000;
-float wt[wtSize];
 extern void logf(const char *, float);
 
 constexpr int wtUpdaterId = 1;
@@ -50,7 +48,7 @@ SubSynthVoiceManagement::SubSynthVoiceManagement() : counter(0)
     FOR_ALL_VOICES(voice->synth.setWavetable(wt));
 }
 
-void generateBasicWavetable(enum OscType t, float vol)
+void generateBasicWavetable(float *wt, enum OscType t, float vol)
 {
     BasicOscillator gen;
     gen.setFrequency(50);
@@ -62,7 +60,7 @@ void generateBasicWavetable(enum OscType t, float vol)
     }
 }
 
-void generateFmWavetable(float ratioOp2, float mod2To1Amt, float ratioOp3, float mod3To2Amt)
+void generateFmWavetable(float *wt, float ratioOp2, float mod2To1Amt, float ratioOp3, float mod3To2Amt)
 {
     float p0 = 0, p1 = 0, p2 = 0;
     const float f0 = 50, f1 = ratioOp2 * 50, f2 = ratioOp3 * 50;
@@ -98,7 +96,7 @@ void generateFmWavetable(float ratioOp2, float mod2To1Amt, float ratioOp3, float
     }
 }
 
-void generateAdditWavetable(const float *freqs, const float *amplitudes)
+void generateAdditWavetable(float *wt, const float *freqs, const float *amplitudes)
 {
     std::vector<float> phases;
     float volmult = 0;
@@ -121,7 +119,7 @@ void generateAdditWavetable(const float *freqs, const float *amplitudes)
     }
 }
 
-void generateSweepWavetable(enum OscType t)
+void generateSweepWavetable(float *wt, enum OscType t)
 {
     const float vol = sqrt(2);
 
@@ -138,7 +136,7 @@ void generateSweepWavetable(enum OscType t)
     }
 }
 
-void generatePwmWavetable()
+void generatePwmWavetable(float *wt)
 {
     int phase = 0;
     const int phaseMax = 44100 / 50;
@@ -160,68 +158,68 @@ void SubSynthVoiceManagement::generateWavetable(int id)
     switch (id)
     {
     case 0:
-        generateBasicWavetable(OSC_SINE, sqrt(2));
+        generateBasicWavetable(wt, OSC_SINE, sqrt(2));
         break;
     case 1:
-        generateBasicWavetable(OSC_TRIANGLE, sqrt(3));
+        generateBasicWavetable(wt, OSC_TRIANGLE, sqrt(3));
         break;
     case 2:
-        generateBasicWavetable(OSC_SQUARE, 1);
+        generateBasicWavetable(wt, OSC_SQUARE, 1);
         break;
     case 3:
-        generateBasicWavetable(OSC_SAW, sqrt(3));
+        generateBasicWavetable(wt, OSC_SAW, sqrt(3));
         break;
     case 4:
-        generateFmWavetable(4, 0.02, 1, 0.05);
+        generateFmWavetable(wt, 4, 0.02, 1, 0.05);
         break;
     case 5:
-        generateFmWavetable(6, 0.02, 8, 0.1);
+        generateFmWavetable(wt, 6, 0.02, 8, 0.1);
         break;
     case 6:
-        generateFmWavetable(3, 0.03, 7, 0.1);
+        generateFmWavetable(wt, 3, 0.03, 7, 0.1);
         break;
     case 7:
-        generateFmWavetable(sqrt(3), 0.05, 0.5, 0.1);
+        generateFmWavetable(wt, sqrt(3), 0.05, 0.5, 0.1);
         break;
     case 8:
     {
         const float freqs[] = {50, 100, 150, 200, -1};
         const float amplitudes[] = {1, 0.5, 0.5, 0.25};
-        generateAdditWavetable(freqs, amplitudes);
+        generateAdditWavetable(wt, freqs, amplitudes);
     }
     break;
     case 9:
     {
         const float freqs[] = {50, 75, 150, 250, -1};
         const float amplitudes[] = {1, 0.5, 1, 0.7};
-        generateAdditWavetable(freqs, amplitudes);
+        generateAdditWavetable(wt, freqs, amplitudes);
     }
     break;
     case 10:
     {
         const float freqs[] = {50, 200, 400, 1200, -1};
         const float amplitudes[] = {1, 0.8, 0.6, 0.4};
-        generateAdditWavetable(freqs, amplitudes);
+        generateAdditWavetable(wt, freqs, amplitudes);
     }
     break;
     case 11:
     {
         const float freqs[] = {50, 52, -1};
         const float amplitudes[] = {1, 1};
-        generateAdditWavetable(freqs, amplitudes);
+        generateAdditWavetable(wt, freqs, amplitudes);
     }
     break;
     case 12:
-        generateSweepWavetable(OSC_SINE);
+        generateSweepWavetable(wt, OSC_SINE);
         break;
     case 13:
-        generateSweepWavetable(OSC_SAW);
+        generateSweepWavetable(wt, OSC_SAW);
         break;
     case 14:
-        generateSweepWavetable(OSC_SQUARE);
+        generateSweepWavetable(wt, OSC_SQUARE);
         break;
     case 15:
-        generatePwmWavetable();
+        generatePwmWavetable(wt);
         break;
     }
 }
