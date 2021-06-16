@@ -1,6 +1,9 @@
 #pragma once
 #include "BasicOscillator.h"
 #include "MS20Filter.h"
+#include "MoogFilter.h"
+#include "HonestEarRapeFilter.h"
+#include "VAStateVariableFilter.h"
 #include "SubSynthParams.h"
 #include "CallbackUpdatable.h"
 class SubSynth : CallbackUpdatable
@@ -8,7 +11,13 @@ class SubSynth : CallbackUpdatable
     BasicOscillator osc1;
     BasicOscillator osc2;
     BasicOscillator lfo;
-    MS20Filter filter;
+    MS20Filter ms20Filter;
+    MicrotrackerMoog moogFilter;
+    HonestEarRapeFilter herFilter;
+    VAStateVariableFilter svFilter;
+
+    FilterBase *filter;
+
     SubSynthParams params;
     void updateParams();
     float value;
@@ -19,6 +28,7 @@ class SubSynth : CallbackUpdatable
     float lfoToCutoff;
     float externalCutoffModulation = 0;
     float wtPos = 0;
+    float lfoRange = 5;
     // This is used to soften the transition from
     // detuned to no detune situation
     float osc2MixLevel = 0;
@@ -43,5 +53,7 @@ public:
     float getValue();
     void setSamplerate(int rate);
     void setWavetable(float *wt);
+    void setLfoRange(float maxHz);
+    void setFilterType(int type);
     ~SubSynth();
 };

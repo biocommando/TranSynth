@@ -23,7 +23,6 @@ public:
     std::string serializeToString();
     void getName(char *name, int maxLen);
     void getShortName(char *name);
-    //int deserialize(const char *readBuffer);
 };
 
 int deserializeParameter(const char *readBuffer, int *id, float *value);

@@ -31,12 +31,16 @@
 #define PARAM_WT_POS 6
 #define PARAM_WT_TYPE 7
 #define PARAM_PATCH_VOLUME 8
-#define NUM_PARAMS 61
+#define PARAM_LFO_MAX_RATE 9
+#define PARAM_ENVELOPE_SPEED 10
+#define PARAM_FILTER_TYPE 11
+#define NUM_PARAMS 64
 
 class PresetManager
 {
 private:
     ParameterHolder &parameterHolder;
+    std::string fileName;
     FILE *f = nullptr;
     void init();
     void openFile(int rw);
@@ -46,12 +50,13 @@ private:
 public:
     std::vector<std::string> presetNames;
 
-    PresetManager(ParameterHolder &h) : parameterHolder(h)
+    PresetManager(ParameterHolder &h, const std::string &file = "TranSynPresets.dat") :
+        parameterHolder(h), fileName(file)
     {
         init();
     }
 
-    void readProgram(int number);
+    std::string readProgram(int number);
 
     void saveProgram(int number, const std::string &name);
 

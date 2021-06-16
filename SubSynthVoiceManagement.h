@@ -3,7 +3,6 @@
 #include "SubSynth.h"
 #include "AdsrEnvelope.h"
 #include "CallbackUpdatable.h"
-#include "VCMgmtEnvUpdater.h"
 
 #define SS_VOICEMNGMT_VOICES 16
 #define SS_VOICEMNGMT_PARAMS 4
@@ -24,51 +23,34 @@ public:
     }
 };
 
-class GenericCallbackUpdatable : public CallbackUpdatable
+class ParamUpdateListener
 {
 public:
+    virtual void onParamUpdated(int id, float value) = 0;
+    virtual ~ParamUpdateListener() {}
+};
+
+class GenericCallbackUpdatable : public CallbackUpdatable
+{
+
+public:
+    ParamUpdateListener *listener = nullptr;
+    int id = 0;
     float value = 0;
 
     void onUpdateWithValue(float value)
     {
         this->value = value;
-    }
-};
-
-class WtGenerator
-{
-public:
-    virtual void generateWavetable(int id) = 0;
-    virtual ~WtGenerator() {}
-};
-
-class WtUpdater : public CallbackUpdatable
-{
-    int value = -1;
-    WtGenerator *gen = nullptr;
-
-public:
-    void init(WtGenerator *gen)
-    {
-        this->gen = gen;
-        onUpdateWithValue(0);
-    }
-
-    void onUpdateWithValue(float value)
-    {
-        const int numValues = 16;
-        int newVal = value * numValues;
-        if (newVal >= numValues)
-            newVal = numValues - 1;
-        if (newVal != this->value)
+        if (listener)
         {
-            this->value = newVal;
-            gen->generateWavetable(newVal);
+            listener->onParamUpdated(id, value);
         }
     }
+
+    virtual ~GenericCallbackUpdatable() {}
 };
 
-class SubSynthVoiceManagement : public WtGenerator, CallbackUpdatable, ADSRUpdater
+class SubSynthVoiceManagement : public ParamUpdateListener, CallbackUpdatable
 {
     SubSynthVoice voices[SS_VOICEMNGMT_VOICES];
     SubSynthParams params[SS_VOICEMNGMT_PARAMS];
@@ -76,17 +58,31 @@ class SubSynthVoiceManagement : public WtGenerator, CallbackUpdatable, ADSRUpdat
     float value;
     int sampleRate;
     void updateSynthParams();
-    VCMgmtEnvUpdater envelopeUpdaters[3];
     long nextCounter();
     void activateVoice(int voiceIndex, float midiNote, int noteNumber, int velocity, int channel);
     long counter;
+
+    GenericCallbackUpdatable attackUpdater;
+    GenericCallbackUpdatable decayUpdater;
+    GenericCallbackUpdatable releaseUpdater;
 
     GenericCallbackUpdatable velocityToVolume;
     GenericCallbackUpdatable velocityToFilter;
     GenericCallbackUpdatable stereoEffect;
     GenericCallbackUpdatable wtPos;
     GenericCallbackUpdatable volume;
-    WtUpdater wtUpdater;
+
+    GenericCallbackUpdatable lfoMaxRate;
+    GenericCallbackUpdatable envelopeSpeed;
+
+    GenericCallbackUpdatable filterType;
+    int currentFilterType = -1;
+    
+    float envelopeScaleFactor = 4;
+
+    GenericCallbackUpdatable wtUpdater;
+    int currentWt = -1;
+    void generateWavetable(int id);
 
     void noteOn(float midiNote, int noteNumber, int velocity, int channel);
 
@@ -95,17 +91,14 @@ public:
     ~SubSynthVoiceManagement();
     void onUpdate();
     void calculateNext();
-    void setAttack(float value);
-    void setDecay(float value);
-    void setRelease(float value);
     void noteOn(int midiNote, int velocity);
     void noteOff(int midiNote);
 
     void setSampleRate(int rate);
 
-    CallbackUpdatable *getAttackUpdater();
-    CallbackUpdatable *getDecayUpdater();
-    CallbackUpdatable *getReleaseUpdater();
+    CallbackUpdatable *getAttackUpdater() { return &attackUpdater; }
+    CallbackUpdatable *getDecayUpdater() { return &decayUpdater; }
+    CallbackUpdatable *getReleaseUpdater() { return &releaseUpdater; }
 
     CallbackUpdatable *getVelocityToFilterUpdater();
     CallbackUpdatable *getVelocityToVolumeUpdater();
@@ -113,8 +106,11 @@ public:
     CallbackUpdatable *getWtPosUpdater();
     CallbackUpdatable *getWtTypeUpdater();
     CallbackUpdatable *getVolumeUpdater();
+    CallbackUpdatable *getLfoMaxRateUpdater() { return &lfoMaxRate; }
+    CallbackUpdatable *getEnvelopeSpeedUpdater() { return &envelopeSpeed; }
+    CallbackUpdatable *getFilterTypeUpdater() { return &filterType; }
 
-    void generateWavetable(int id);
+    void onParamUpdated(int id, float value);
 
     bool isStereoEnabled();
 

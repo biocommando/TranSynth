@@ -7,17 +7,47 @@ constexpr int wtSize = 10000;
 float wt[wtSize];
 extern void logf(const char *, float);
 
+constexpr int wtUpdaterId = 1;
+constexpr int lfoMaxRateId = 2;
+constexpr int envelopeSpeedId = 3;
+constexpr int attackUpdaterId = 4;
+constexpr int decayUpdaterId = 5;
+constexpr int releaseUpdaterId = 6;
+constexpr int filterTypeUpdaterId = 7;
+
+#define FOR_ALL_VOICES(expr)                             \
+    for (int vci = 0; vci < SS_VOICEMNGMT_VOICES; vci++) \
+        do                                               \
+        {                                                \
+            auto voice = &voices[vci];                   \
+            expr;                                        \
+    } while (0)
+
 SubSynthVoiceManagement::SubSynthVoiceManagement() : counter(0)
 {
-    for (int i = 0; i < 3; i++)
-    {
-        envelopeUpdaters[i].init(this, i);
-    }
-    wtUpdater.init(this);
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
-    {
-        voices[i].synth.setWavetable(wt);
-    }
+    wtUpdater.listener = this;
+    wtUpdater.id = wtUpdaterId;
+    wtUpdater.onUpdateWithValue(0);
+
+    lfoMaxRate.listener = this;
+    lfoMaxRate.id = lfoMaxRateId;
+
+    envelopeSpeed.listener = this;
+    envelopeSpeed.id = envelopeSpeedId;
+
+    attackUpdater.listener = this;
+    attackUpdater.id = attackUpdaterId;
+
+    decayUpdater.listener = this;
+    decayUpdater.id = decayUpdaterId;
+
+    releaseUpdater.listener = this;
+    releaseUpdater.id = releaseUpdaterId;
+
+    filterType.listener = this;
+    filterType.id = filterTypeUpdaterId;
+
+    FOR_ALL_VOICES(voice->synth.setWavetable(wt));
 }
 
 void generateBasicWavetable(enum OscType t, float vol)
@@ -196,6 +226,68 @@ void SubSynthVoiceManagement::generateWavetable(int id)
     }
 }
 
+void SubSynthVoiceManagement::onParamUpdated(int id, float value)
+{
+    switch (id)
+    {
+    case wtUpdaterId:
+    {
+        const int numValues = 16;
+        int newVal = value * numValues;
+        if (newVal >= numValues)
+            newVal = numValues - 1;
+        if (newVal != currentWt)
+        {
+            currentWt = newVal;
+            generateWavetable(newVal);
+        }
+    }
+    break;
+    case lfoMaxRateId:
+    {
+        FOR_ALL_VOICES(voice->synth.setLfoRange(1 + value * 49));
+    }
+    break;
+    case envelopeSpeedId:
+    {
+        envelopeScaleFactor = 1 + 29 * value;
+        const float s = envelopeScaleFactor * sampleRate;
+        FOR_ALL_VOICES(voice->envelope.setAttack((int)(s * attackUpdater.value)));
+        FOR_ALL_VOICES(voice->envelope.setDecay((int)(s * decayUpdater.value)));
+        FOR_ALL_VOICES(voice->envelope.setRelease((int)(s * releaseUpdater.value)));
+    }
+    break;
+    case attackUpdaterId:
+    {
+        FOR_ALL_VOICES(voice->envelope.setAttack((int)(envelopeScaleFactor * sampleRate * value)));
+    }
+    break;
+    case decayUpdaterId:
+    {
+        FOR_ALL_VOICES(voice->envelope.setDecay((int)(envelopeScaleFactor * sampleRate * value)));
+    }
+    break;
+    case releaseUpdaterId:
+    {
+        FOR_ALL_VOICES(voice->envelope.setRelease((int)(envelopeScaleFactor * sampleRate * value)));
+    }
+    break;
+    case filterTypeUpdaterId:
+    {
+        const int numValues = 10;
+        int newVal = value * numValues;
+        if (newVal >= numValues)
+            newVal = numValues - 1;
+        if (newVal != currentFilterType)
+        {
+            currentFilterType = newVal;
+            FOR_ALL_VOICES(voice->synth.setFilterType(newVal));
+        }
+    }
+    break;
+    }
+}
+
 SubSynthVoiceManagement::~SubSynthVoiceManagement()
 {
 }
@@ -204,10 +296,7 @@ void SubSynthVoiceManagement::setSampleRate(int rate)
 {
     sampleRate = rate;
 
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
-    {
-        voices[i].synth.setSamplerate(rate);
-    }
+    FOR_ALL_VOICES(voice->synth.setSamplerate(rate));
 }
 
 SubSynthParams *SubSynthVoiceManagement::getParams(int paramSet)
@@ -217,30 +306,6 @@ SubSynthParams *SubSynthVoiceManagement::getParams(int paramSet)
         return &params[paramSet];
     }
     return nullptr;
-}
-
-void SubSynthVoiceManagement::setAttack(float value)
-{
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
-    {
-        voices[i].envelope.setAttack((int)(4 * sampleRate * value));
-    }
-}
-
-void SubSynthVoiceManagement::setDecay(float value)
-{
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
-    {
-        voices[i].envelope.setDecay((int)(4 * sampleRate * value));
-    }
-}
-
-void SubSynthVoiceManagement::setRelease(float value)
-{
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
-    {
-        voices[i].envelope.setRelease((int)(4 * sampleRate * value));
-    }
 }
 
 void SubSynthVoiceManagement::onUpdate()
@@ -382,21 +447,6 @@ void SubSynthVoiceManagement::noteOff(int midiNote)
             voices[i].envelope.release();
         }
     }
-}
-
-CallbackUpdatable *SubSynthVoiceManagement::getAttackUpdater()
-{
-    return &envelopeUpdaters[0];
-}
-
-CallbackUpdatable *SubSynthVoiceManagement::getDecayUpdater()
-{
-    return &envelopeUpdaters[1];
-}
-
-CallbackUpdatable *SubSynthVoiceManagement::getReleaseUpdater()
-{
-    return &envelopeUpdaters[2];
 }
 
 CallbackUpdatable *SubSynthVoiceManagement::getVelocityToFilterUpdater()

@@ -14,6 +14,7 @@ public:
     void setDecay(int samples);
     void setSustain(float level);
     void setRelease(int samples);
+    void setStageMaxLength(float length);
 
     void calculateNext();
     void trigger();

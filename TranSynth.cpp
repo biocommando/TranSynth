@@ -145,10 +145,15 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
     addParameter("Velocity to volume", "Vel>Vol", createId(PARAM_VEL_TO_VOLUME), voiceMgmt.getVelocityToVolumeUpdater(), 1);
     addParameter("Velocity to filter", "Vel>Flt", createId(PARAM_VEL_TO_FILTER), voiceMgmt.getVelocityToFilterUpdater(), 0);
 
-    addParameter("Stereo unison detune", "Stereo", createId(PARAM_STEREO_UNISON_DETUNE), voiceMgmt.getStereoEffectUpdater(), 0);
+    addParameter("Stereo detune", "Stereo", createId(PARAM_STEREO_UNISON_DETUNE), voiceMgmt.getStereoEffectUpdater(), 0);
 
     addParameter("Wavetable type", "Wavetbl", createId(PARAM_WT_TYPE), voiceMgmt.getWtTypeUpdater());
     addParameter("Wavetable position", "WtblPos", createId(PARAM_WT_POS), voiceMgmt.getWtPosUpdater());
+
+    addParameter("LFO maximum rate", "LFO-max", createId(PARAM_LFO_MAX_RATE), voiceMgmt.getLfoMaxRateUpdater(), 4.0f/49);
+    addParameter("Envelope max length", "EnvLen", createId(PARAM_ENVELOPE_SPEED), voiceMgmt.getEnvelopeSpeedUpdater(), 3.0f/29);
+
+    addParameter("Filter type", "FltType", createId(PARAM_FILTER_TYPE), voiceMgmt.getFilterTypeUpdater());
 
     addParameter("Volume", "Volume", createId(PARAM_PATCH_VOLUME), voiceMgmt.getVolumeUpdater(), 1.0f);
 }
@@ -373,6 +378,7 @@ bool PresetManager::readProgram(int number, std::string &name, bool readNameOnly
     char buf[256];
     bool pgFound = false;
     name.assign("");
+    bool doLoadProgram = !readNameOnly && !copyToTmp;
     while (!feof(f))
     {
         fgets(buf, sizeof(buf), f);
@@ -383,6 +389,14 @@ bool PresetManager::readProgram(int number, std::string &name, bool readNameOnly
         if (cmd == '{' && id == number)
         {
             pgFound = true;
+            // Set all parameters to initial value
+            if (doLoadProgram && value == 0)
+            {
+                for (int i = 0; i < NUM_PARAMS; i++)
+                {
+                    parameterHolder.getParameterByIndex(i)->setInitialValue();
+                }
+            }
         }
         if (!pgFound)
             continue;
@@ -390,10 +404,9 @@ bool PresetManager::readProgram(int number, std::string &name, bool readNameOnly
         if (copyToTmp)
             fprintf(copyToTmp, "%s", buf);
 
-        if (cmd == '+' && !readNameOnly && !copyToTmp)
+        if (cmd == '+' && doLoadProgram)
         {
-            auto p = parameterHolder.getParameterById(id);
-            if (p)
+            if (auto p = parameterHolder.getParameterById(id))
                 p->setValue(value);
         }
         if (cmd == '$')
@@ -428,7 +441,7 @@ void PresetManager::init()
 void PresetManager::openFile(int rw)
 {
     closeFile();
-    std::string presetFileName = std::string(workDir) + "\\" + "TranSynPresets.dat";
+    std::string presetFileName = std::string(workDir) + "\\" + fileName;
     f = fopen(presetFileName.c_str(), rw ? "w" : "r");
 }
 
@@ -440,12 +453,13 @@ void PresetManager::closeFile()
         f = nullptr;
     }
 }
-void PresetManager::readProgram(int number)
+std::string PresetManager::readProgram(int number)
 {
     std::string s;
     openFile(0);
     readProgram(number, s, false);
     closeFile();
+    return s;
 }
 
 void PresetManager::saveProgram(int number, const std::string &name)

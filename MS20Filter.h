@@ -1,6 +1,8 @@
 #pragma once
 
-class MS20Filter
+#include "FilterBase.h"
+
+class MS20Filter : public FilterBase
 {
 private:
     float k2, k1, T;

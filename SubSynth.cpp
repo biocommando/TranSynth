@@ -1,10 +1,12 @@
 #include "SubSynth.h"
 SubSynth::SubSynth() : osc1(44100),
-                       osc2(44100), lfo(44100), filter(44100)
+                       osc2(44100), lfo(44100), ms20Filter(44100),
+                       moogFilter(44100), herFilter(44100)
 {
     params.setOnParamsChanged(this);
     value = 0;
     midiNote = 0;
+    filter = &ms20Filter;
 }
 
 void SubSynth::onUpdate()
@@ -24,7 +26,28 @@ void SubSynth::setSamplerate(int rate)
     osc1.setSamplerate(rate);
     osc2.setSamplerate(rate);
     lfo.setSamplerate(rate);
-    filter.setSamplerate(rate);
+    filter->setSamplerate(rate);
+}
+
+void SubSynth::setFilterType(int type)
+{
+    updated = true;
+    switch (type)
+    {
+    case 0:
+        filter = &ms20Filter;
+        break;
+    case 1:
+        filter = &moogFilter;
+        break;
+    case 2:
+        filter = &herFilter;
+        break;
+    default:
+        svFilter.setFilterType(type - 3);
+        filter = &svFilter;
+    break;
+    }
 }
 
 SubSynth::~SubSynth()
@@ -42,10 +65,10 @@ void SubSynth::updateParams()
     lfoToPitch = params.getLfoToPitchAmount();
     lfoToCutoff = params.getLfoToCutoffAmount();
 
-    lfo.setFrequency(params.getLfoFrequency() * 5.0f + 0.01f);
+    lfo.setFrequency(params.getLfoFrequency() * lfoRange + 0.01f);
 
-    filter.setCutoff(params.getFilterCutoff());
-    filter.setResonance(params.getFilterResonance());
+    filter->setCutoff(params.getFilterCutoff());
+    filter->setResonance(params.getFilterResonance());
 
     osc1.setWaveTableParams(wtPos, params.getWtWin());
     osc2.setWaveTableParams(wtPos, params.getWtWin());
@@ -57,20 +80,27 @@ void SubSynth::setWavetablePos(float pos)
     {
         wtPos = pos;
         updated = true;
-        //updateParams();
+    }
+}
+
+void SubSynth::setLfoRange(float maxHz)
+{
+    if (lfoRange != maxHz)
+    {
+        lfoRange = maxHz;
+        updated = true;
     }
 }
 
 void SubSynth::setNoteFrequency(float midiNote)
 {
     this->midiNote = midiNote;
-    filter.reset();
+    filter->reset();
     osc1.randomizePhase();
     osc2.randomizePhase();
     updated = true;
     released = false;
     osc2MixLevel = 1;
-    //updateParams();
 }
 
 SubSynthParams *SubSynth::getParams()
@@ -135,8 +165,8 @@ void SubSynth::calculateNext()
 
     oscOutput *= 0.5f;
 
-    filter.setModulation(lfoToCutoff * lfoValue + externalCutoffModulation);
-    const float filterOutput = filter.calculate(oscOutput);
+    filter->setModulation(lfoToCutoff * lfoValue + externalCutoffModulation);
+    const float filterOutput = filter->calculate(oscOutput);
 
     const float distortionOutput = distort(filterOutput);
 

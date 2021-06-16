@@ -23,9 +23,7 @@ constexpr int TEXT_H = 16;
     {                                         \
         GRID_RECT(r, x, y, w, h);             \
         auto label = new CTextLabel(r, text); \
-        label->setBackColor(cBg);             \
-        label->setFrameColor(cBg);            \
-        label->setFontColor(cFg);             \
+        setColors(label, false);              \
         xframe->addView(label);               \
         aexpr;                                \
     } while (0)
@@ -35,10 +33,11 @@ constexpr int tagPresetList = 102;
 constexpr int tagPresetActionList = 103;
 constexpr int tagGroupedParam = 201;
 constexpr int tagGlobalParam = 202;
+constexpr int tagPresetNameEdit = 301;
 
 extern void logf(const char *, float);
 
-extern CColor gold;
+extern CColor gold, bggray;
 
 extern char workDir[1024];
 extern void resolveWorkDir();
@@ -68,12 +67,26 @@ public:
             int v = value * 16;
             if (v >= 16)
                 v = 15;
-            const char waveTableNames[][16] = {
+            const char waveTableNames[][8] = {
                 "SIN", "TRI", "SQR", "SAW",
                 "FM-1", "FM-2", "FM-3", "FM-4",
                 "Adt-1", "Adt-2", "Adt-3", "Adt-4",
                 "sinsw", "sawsw", "sqrsw", "PWM"};
             label->setText(waveTableNames[v]);
+            return;
+        }
+        else if (paramId == createId(PARAM_FILTER_TYPE))
+        {
+            int v = value * 10;
+            if (v >= 10)
+                v = 9;
+            const char FilterTypeNames[][8] = {
+                "MS20", "Moog", "Aggro",
+                "LoPass", "HiPass", "BPass",
+                "BShelf", "Notch", "AllPass",
+                "Peak"
+            };
+            label->setText(FilterTypeNames[v]);
             return;
         }
         char text[5];
@@ -93,6 +106,10 @@ class TranSynthGui : public AEffGUIEditor, public CControlListener
     COptionMenu *presetList = nullptr;
     COptionMenu *presetActionList = nullptr;
     CBitmap *knobBackground = nullptr;
+    CTextEdit *currentPresetNameEdit = nullptr;
+
+    std::string currentPresetName = "<Preset name>";
+
     std::vector<Knob *> knobs;
     int linkMode[4];
     int presetNumber = -1;
@@ -143,18 +160,21 @@ class TranSynthGui : public AEffGUIEditor, public CControlListener
             setLinkMode(1, 1, 0, 1);
             break;
         case 9:
-            setLinkMode(1, 0, 0, 1);
+            setLinkMode(1, 0, 1, 1);
             break;
         case 10:
-            setLinkMode(0, 1, 0, 1);
+            setLinkMode(1, 0, 0, 1);
             break;
         case 11:
-            setLinkMode(1, 1, 2, 2); // A-D, S-R
+            setLinkMode(0, 1, 0, 1);
             break;
         case 12:
-            setLinkMode(2, 1, 1, 2); // A-R, D-S
+            setLinkMode(1, 1, 2, 2); // A-D, S-R
             break;
         case 13:
+            setLinkMode(2, 1, 1, 2); // A-R, D-S
+            break;
+        case 14:
             setLinkMode(1, 2, 1, 2); // A-S, D-R
             break;
         }
@@ -182,6 +202,15 @@ class TranSynthGui : public AEffGUIEditor, public CControlListener
         knob->setValue(synth()->getParameterById(id));
         knobs.push_back(knob);
         return knob;
+    }
+
+    void setColors(CParamDisplay *ctrl, bool setFrameColor = true)
+    {
+        const CColor cBg = kBlackCColor, cFg = gold;
+        ctrl->setBackColor(cBg);
+        if (setFrameColor)
+            ctrl->setFrameColor(cFg);
+        ctrl->setFontColor(cFg);
     }
 
 public:
@@ -214,9 +243,7 @@ public:
         GRID_RECT(optionRect, 3, 8.5, 2 * GRID_SIZE, TEXT_H);
 
         linkModeList = new COptionMenu(optionRect, this, tagLinkModeList);
-        linkModeList->setBackColor(cBg);
-        linkModeList->setFrameColor(cFg);
-        linkModeList->setFontColor(cFg);
+        setColors(linkModeList);
 
         linkModeList->addEntry(new CMenuItem("Link mode...", 1 << 1));
         linkModeList->addEntry(new CMenuItem("No link"));
@@ -227,6 +254,7 @@ public:
         linkModeList->addEntry(new CMenuItem("D-S-R"));
         linkModeList->addEntry(new CMenuItem("S-R"));
         linkModeList->addEntry(new CMenuItem("A-S"));
+        linkModeList->addEntry(new CMenuItem("A-D-R"));
         linkModeList->addEntry(new CMenuItem("A-S-R"));
         linkModeList->addEntry(new CMenuItem("A-R"));
         linkModeList->addEntry(new CMenuItem("D-R"));
@@ -266,25 +294,36 @@ public:
             }
         }
 
+        const int globalParams[] = {
+            PARAM_ATTACK, PARAM_DECAY, PARAM_RELEASE, PARAM_ENVELOPE_SPEED,
+            PARAM_STEREO_UNISON_DETUNE, PARAM_LFO_MAX_RATE, PARAM_FILTER_TYPE,
+            PARAM_WT_POS, PARAM_WT_TYPE, PARAM_VEL_TO_FILTER, PARAM_VEL_TO_VOLUME,
+            PARAM_PATCH_VOLUME, -1};
+
         ADD_TEXT("G L O B A L  P A R A M E T E R S", 12, 0.5, GRID_X(6), TEXT_H, );
 
-        for (int i = 0; i < 9; i++)
+        for (int i = 0; globalParams[i] >= 0; i++)
         {
             int xOffset = i > 6 ? 3 : 0;
             int yOffset = i > 6 ? -7 : 0;
-            const auto id = createId(i);
+            const auto id = createId(globalParams[i]);
             char buf[32];
             synth()->getParameterLongName(id, buf);
             ADD_TEXT(buf, 12 + xOffset, i + 1.25 + yOffset, GRID_X(2), TEXT_H, label->setHoriAlign(kLeftText));
             auto knob = addKnob(xframe, 14 + xOffset, i + 1 + yOffset, id, tagGlobalParam);
         }
 
+        GRID_RECT(presetNameEditRect, 6, 8, GRID_SIZE * 6, TEXT_H * 1.5);
+        currentPresetNameEdit = new CTextEdit(presetNameEditRect, this, tagPresetNameEdit, currentPresetName.c_str());
+        setColors(currentPresetNameEdit);
+        currentPresetNameEdit->setBackColor(bggray);
+
+        xframe->addView(currentPresetNameEdit);
+
         ADD_TEXT("Preset", 6, 8.5, GRID_SIZE * 1, TEXT_H, label->setHoriAlign(kLeftText));
         GRID_RECT(presetRect, 7, 8.5, 2 * GRID_SIZE, TEXT_H);
         presetList = new COptionMenu(presetRect, this, tagPresetList);
-        presetList->setBackColor(cBg);
-        presetList->setFrameColor(cFg);
-        presetList->setFontColor(cFg);
+        setColors(presetList);
 
         presetList->addEntry(new CMenuItem("Select preset", 1 << 1));
 
@@ -298,9 +337,7 @@ public:
 
         GRID_RECT(presetActRect, 9.5, 8.5, 2 * GRID_SIZE, TEXT_H);
         presetActionList = new COptionMenu(presetActRect, this, tagPresetActionList);
-        presetActionList->setBackColor(cBg);
-        presetActionList->setFrameColor(cFg);
-        presetActionList->setFontColor(cFg);
+        setColors(presetActionList);
         presetActionList->addEntry(new CMenuItem("Preset actions...", 1 << 1));
         presetActionList->addEntry(new CMenuItem("Save preset"));
         presetActionList->addEntry(new CMenuItem("Save preset as new"));
@@ -315,7 +352,7 @@ public:
         auto logo = new CView(logoRect);
         logo->setBackground(logoBmp);
         xframe->addView(logo);
-        
+
         knobBackground->forget();
         logoBmp->forget();
 
@@ -358,7 +395,8 @@ public:
         {
             auto presetMgr = synth()->getPresetManager();
             presetNumber = presetList->getCurrentIndex() - 1;
-            presetMgr->readProgram(presetNumber);
+            currentPresetName = presetMgr->readProgram(presetNumber);
+            currentPresetNameEdit->setText(currentPresetName.c_str());
             presetList->setCurrent(0);
             for (int i = 0; i < knobs.size(); i++)
             {
@@ -372,16 +410,15 @@ public:
             presetActionList->setCurrent(0);
             if (action == 1 && presetNumber >= 0) // save / replace
             {
-                presetMgr->saveProgram(presetNumber, presetMgr->presetNames[presetNumber]);
+                presetMgr->saveProgram(presetNumber, currentPresetName);
             }
             else // save as new
             {
                 presetMgr->refresh();
-                const auto name = std::string("User program ") + std::to_string(presetMgr->presetNames.size());
-                presetMgr->saveProgram(presetMgr->presetNames.size(), name);
+                presetMgr->saveProgram(presetMgr->presetNames.size(), currentPresetName);
                 presetNumber = presetMgr->presetNames.size();
-                
-                presetList->addEntry(new CMenuItem(name.c_str()));
+
+                presetList->addEntry(new CMenuItem(currentPresetName.c_str()));
             }
         }
         else if (tag == tagGroupedParam || tag == tagGlobalParam)
@@ -404,6 +441,12 @@ public:
                     }
                 }
             }
+        }
+        else if (tag == tagPresetNameEdit)
+        {
+            char name[256];
+            currentPresetNameEdit->getText(name);
+            currentPresetName.assign(name);
         }
     }
 };
