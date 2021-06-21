@@ -3,30 +3,44 @@
 #include "TranSynth.h"
 #include "TranSynthGui.h"
 #include <string>
+#include <iostream>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
 #include <windows.h>
 
-char workDir[1024] = {0};
+std::string workDir;
 void resolveWorkDir()
 {
-    if (workDir[0])
+    if (workDir != "")
         return;
     // work out the resource directory
     // first we get the DLL path from windows API
     extern void *hInstance;
     wchar_t workDirWc[1024];
     GetModuleFileName((HMODULE)hInstance, workDirWc, 1024);
-    wcstombs(workDir, workDirWc, 1024);
+    char workDirC[1024];
+    wcstombs(workDirC, workDirWc, 1024);
+
+    workDir.assign(workDirC);
+
     // let's get rid of the DLL file name
-    for (int i = strlen(workDir) - 1; i >= 0; i--)
-        if (workDir[i] == '\\')
-        {
-            workDir[i] = 0;
-            break;
-        }
+    auto posBslash = workDir.find_last_of('\\');
+    if (posBslash != std::string::npos)
+    {
+        workDir = workDir.substr(0, posBslash);
+    }
+
+    // Let's find out the actual directory we want to work in
+    auto workDirSpec = workDir + "\\TranSynthWorkDir.txt";
+    std::ifstream f;
+    f.open(workDirSpec);
+    std::getline(f, workDirSpec);
+    f.close();
+    if (workDirSpec != "")
+        workDir = workDirSpec;
 }
 
 AudioEffect *createEffectInstance(audioMasterCallback audioMaster)
@@ -150,8 +164,8 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
     addParameter("Wavetable type", "Wavetbl", createId(PARAM_WT_TYPE), voiceMgmt.getWtTypeUpdater());
     addParameter("Wavetable position", "WtblPos", createId(PARAM_WT_POS), voiceMgmt.getWtPosUpdater());
 
-    addParameter("LFO maximum rate", "LFO-max", createId(PARAM_LFO_MAX_RATE), voiceMgmt.getLfoMaxRateUpdater(), 4.0f/49);
-    addParameter("Envelope max length", "EnvLen", createId(PARAM_ENVELOPE_SPEED), voiceMgmt.getEnvelopeSpeedUpdater(), 3.0f/29);
+    addParameter("LFO maximum rate", "LFO-max", createId(PARAM_LFO_MAX_RATE), voiceMgmt.getLfoMaxRateUpdater(), 4.0f / 49);
+    addParameter("Envelope max length", "EnvLen", createId(PARAM_ENVELOPE_SPEED), voiceMgmt.getEnvelopeSpeedUpdater(), 3.0f / 29);
 
     addParameter("Filter type", "FltType", createId(PARAM_FILTER_TYPE), voiceMgmt.getFilterTypeUpdater());
 
@@ -441,7 +455,7 @@ void PresetManager::init()
 void PresetManager::openFile(int rw)
 {
     closeFile();
-    std::string presetFileName = std::string(workDir) + "\\" + fileName;
+    std::string presetFileName = workDir + "\\" + fileName;
     f = fopen(presetFileName.c_str(), rw ? "w" : "r");
 }
 

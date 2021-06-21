@@ -1,8 +1,9 @@
 #pragma once
+#include <vector>
 #include "EnvelopeStage.h"
 class AdsrEnvelope
 {
-    EnvelopeStage *stages[4];
+    std::vector<EnvelopeStage> stages;
     int stage;
     bool endReached;
     float sustain, releaseLevel;

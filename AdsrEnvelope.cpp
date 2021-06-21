@@ -5,28 +5,24 @@ AdsrEnvelope::AdsrEnvelope()
     endReached = true;
     sustain = 0;
     stage = 0;
-    stages[0] = new EnvelopeStage(true);
-    stages[1] = new EnvelopeStage(true);
-    stages[2] = new EnvelopeStage(false);
-    stages[3] = new EnvelopeStage(true);
+    stages.push_back(EnvelopeStage(true));
+    stages.push_back(EnvelopeStage(true));
+    stages.push_back(EnvelopeStage(false));
+    stages.push_back(EnvelopeStage(true));
 }
 
 AdsrEnvelope::~AdsrEnvelope()
 {
-    for (int i = 0; i < 4; i++)
-    {
-        delete stages[i];
-    }
 }
 
 void AdsrEnvelope::setAttack(int samples)
 {
-    stages[0]->setLength(samples);
+    stages[0].setLength(samples);
 }
 
 void AdsrEnvelope::setDecay(int samples)
 {
-    stages[1]->setLength(samples);
+    stages[1].setLength(samples);
 }
 
 void AdsrEnvelope::setSustain(float level)
@@ -36,7 +32,7 @@ void AdsrEnvelope::setSustain(float level)
 
 void AdsrEnvelope::setRelease(int samples)
 {
-    stages[3]->setLength(samples);
+    stages[3].setLength(samples);
 }
 
 void AdsrEnvelope::calculateNext()
@@ -45,7 +41,7 @@ void AdsrEnvelope::calculateNext()
     {
         return;
     }
-    EnvelopeStage *current = stages[stage];
+    EnvelopeStage *current = &stages[stage];
     if (current->hasNext())
     {
         current->calcuateNext();
@@ -94,7 +90,7 @@ void AdsrEnvelope::trigger()
 void AdsrEnvelope::triggerStage(int stage)
 {
     this->stage = stage;
-    stages[stage]->reset();
+    stages[stage].reset();
 }
 
 void AdsrEnvelope::release()
@@ -110,7 +106,7 @@ int AdsrEnvelope::getStage()
 
 float AdsrEnvelope::getRatio()
 {
-    return stages[stage]->getRatio();
+    return stages[stage].getRatio();
 }
 
 float AdsrEnvelope::getEnvelope()

@@ -39,7 +39,7 @@ extern void logf(const char *, float);
 
 extern CColor gold, bggray;
 
-extern char workDir[1024];
+extern std::string workDir;
 extern void resolveWorkDir();
 
 class Knob : public CKnob
@@ -183,7 +183,7 @@ class TranSynthGui : public AEffGUIEditor, public CControlListener
     CBitmap *loadBitmap(const char *relativePath)
     {
         resolveWorkDir();
-        std::string s = std::string(workDir) + "\\" + relativePath;
+        std::string s = workDir + "\\" + relativePath;
         std::wstring ws(s.size(), L'#');
         mbstowcs(&ws[0], s.c_str(), s.size());
         auto bmp = Gdiplus::Bitmap::FromFile(ws.c_str(), false);
