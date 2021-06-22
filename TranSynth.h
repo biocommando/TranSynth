@@ -34,7 +34,8 @@
 #define PARAM_LFO_MAX_RATE 9
 #define PARAM_ENVELOPE_SPEED 10
 #define PARAM_FILTER_TYPE 11
-#define NUM_PARAMS 64
+#define PARAM_CYCLE_ENVELOPE 12
+#define NUM_PARAMS 65
 
 class PresetManager
 {
@@ -50,8 +51,7 @@ private:
 public:
     std::vector<std::string> presetNames;
 
-    PresetManager(ParameterHolder &h, const std::string &file = "TranSynPresets.dat") :
-        parameterHolder(h), fileName(file)
+    PresetManager(ParameterHolder &h, const std::string &file = "TranSynPresets.dat") : parameterHolder(h), fileName(file)
     {
         init();
     }

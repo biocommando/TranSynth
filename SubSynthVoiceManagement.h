@@ -4,7 +4,7 @@
 #include "AdsrEnvelope.h"
 #include "CallbackUpdatable.h"
 
-#define SS_VOICEMNGMT_VOICES 16
+#define SS_VOICEMNGMT_VOICES 128
 #define SS_VOICEMNGMT_PARAMS 4
 
 class SubSynthVoice
@@ -81,6 +81,8 @@ class SubSynthVoiceManagement : public ParamUpdateListener, CallbackUpdatable
     int currentFilterType = -1;
     
     float envelopeScaleFactor = 4;
+    
+    GenericCallbackUpdatable cycleEnvelope;
 
     GenericCallbackUpdatable wtUpdater;
     int currentWt = -1;
@@ -89,6 +91,7 @@ class SubSynthVoiceManagement : public ParamUpdateListener, CallbackUpdatable
 
     void noteOn(float midiNote, int noteNumber, int velocity, int channel);
 
+    int voiceLimit = 32;
 public:
     SubSynthVoiceManagement();
     ~SubSynthVoiceManagement();
@@ -112,10 +115,13 @@ public:
     CallbackUpdatable *getLfoMaxRateUpdater() { return &lfoMaxRate; }
     CallbackUpdatable *getEnvelopeSpeedUpdater() { return &envelopeSpeed; }
     CallbackUpdatable *getFilterTypeUpdater() { return &filterType; }
+    CallbackUpdatable *getCycleEnvelopeUpdater() { return &cycleEnvelope; }
 
     void onParamUpdated(int id, float value);
 
     bool isStereoEnabled();
+
+    void setVoiceLimit(int limit);
 
     void getValue(float *ch1, float *ch2);
     SubSynthParams *getParams(int paramSet);

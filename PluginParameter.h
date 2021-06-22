@@ -1,6 +1,7 @@
 #pragma once
 #include "CallbackUpdatable.h"
 #include <string>
+#include <vector>
 
 class PluginParameter
 {

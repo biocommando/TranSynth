@@ -1,4 +1,5 @@
 #pragma once
+#include "build.h"
 #include "aeffguieditor.h"
 #include "TranSynth.h"
 #include <vector>
@@ -31,6 +32,7 @@ constexpr int TEXT_H = 16;
 constexpr int tagLinkModeList = 101;
 constexpr int tagPresetList = 102;
 constexpr int tagPresetActionList = 103;
+constexpr int tagMacroActionList = 104;
 constexpr int tagGroupedParam = 201;
 constexpr int tagGlobalParam = 202;
 constexpr int tagPresetNameEdit = 301;
@@ -84,9 +86,13 @@ public:
                 "MS20", "Moog", "Aggro",
                 "LoPass", "HiPass", "BPass",
                 "BShelf", "Notch", "APass",
-                "Peak"
-            };
+                "Peak"};
             label->setText(FilterTypeNames[v]);
+            return;
+        }
+        else if (paramId == createId(PARAM_CYCLE_ENVELOPE))
+        {
+            label->setText(value > 0.5 ? "On" : "Off");
             return;
         }
         char text[5];
@@ -105,6 +111,7 @@ class TranSynthGui : public AEffGUIEditor, public CControlListener
     COptionMenu *linkModeList = nullptr;
     COptionMenu *presetList = nullptr;
     COptionMenu *presetActionList = nullptr;
+    COptionMenu *macroActionList = nullptr;
     CBitmap *knobBackground = nullptr;
     CTextEdit *currentPresetNameEdit = nullptr;
 
@@ -296,9 +303,9 @@ public:
 
         const int globalParams[] = {
             PARAM_ATTACK, PARAM_DECAY, PARAM_RELEASE, PARAM_ENVELOPE_SPEED,
-            PARAM_STEREO_UNISON_DETUNE, PARAM_LFO_MAX_RATE, PARAM_FILTER_TYPE,
-            PARAM_WT_POS, PARAM_WT_TYPE, PARAM_VEL_TO_FILTER, PARAM_VEL_TO_VOLUME,
-            PARAM_PATCH_VOLUME, -1};
+            PARAM_STEREO_UNISON_DETUNE, PARAM_LFO_MAX_RATE, PARAM_CYCLE_ENVELOPE,
+            PARAM_FILTER_TYPE, PARAM_WT_POS, PARAM_WT_TYPE, PARAM_VEL_TO_FILTER,
+            PARAM_VEL_TO_VOLUME, PARAM_PATCH_VOLUME, -1};
 
         ADD_TEXT("G L O B A L  P A R A M E T E R S", 12, 0.5, GRID_X(6), TEXT_H, );
 
@@ -343,6 +350,16 @@ public:
         presetActionList->addEntry(new CMenuItem("Save preset as new"));
         xframe->addView(presetActionList);
 
+        GRID_RECT(macroActRect, 12, 8.5, 2 * GRID_SIZE, TEXT_H);
+        macroActionList = new COptionMenu(macroActRect, this, tagMacroActionList);
+        setColors(macroActionList);
+        macroActionList->addEntry(new CMenuItem("Macros...", 1 << 1));
+        macroActionList->addEntry(new CMenuItem("Quantize wavetable windows"));
+        xframe->addView(macroActionList);
+
+        
+
+        ADD_TEXT("v 1.0 build " BUILD_DATE, 14, 8.25, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
         ADD_TEXT("(c) 2017-2021 Joonas Salonpaa", 14, 8.5, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
         ADD_TEXT("github.com/biocommando/TranSynth", 14, 8.75, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
 
@@ -411,6 +428,7 @@ public:
             if (action == 1 && presetNumber >= 0) // save / replace
             {
                 presetMgr->saveProgram(presetNumber, currentPresetName);
+                presetList->getEntry(presetNumber + 1)->setTitle(currentPresetName.c_str());
             }
             else // save as new
             {
@@ -419,6 +437,23 @@ public:
                 presetNumber = presetMgr->presetNames.size();
 
                 presetList->addEntry(new CMenuItem(currentPresetName.c_str()));
+            }
+        }
+        else if (tag == tagMacroActionList)
+        {
+            const auto action = macroActionList->getCurrentIndex();
+            macroActionList->setCurrent(0);
+            if (action == 1)
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    auto id = createId(i, PARAM_WT_WIN);
+                    auto v = synth()->getParameterById(id) + 0.001;
+                    int quantizedSamples = (int)(v * 10000) / 882 * 882;
+                    v = quantizedSamples / 10000.0f;
+                    synth()->setParameterById(id, v);
+                    setParameter(id, v);
+                }
             }
         }
         else if (tag == tagGroupedParam || tag == tagGlobalParam)

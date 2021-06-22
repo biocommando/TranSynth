@@ -1,5 +1,6 @@
 // This is the main DLL file.
 
+#include "Options.h"
 #include "TranSynth.h"
 #include "TranSynthGui.h"
 #include <string>
@@ -80,6 +81,12 @@ int createId(int param)
     return createId(-1, param);
 }
 
+Options *getOptions()
+{
+    static Options options;
+    return &options;
+}
+
 TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS),
                                                         presetManager(parameterHolder)
 {
@@ -88,6 +95,10 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
     setUniqueID(-809164751); // identify
     isSynth(true);
     programsAreChunks();
+
+    resolveWorkDir();
+    getOptions()->read(workDir + "\\options.ini");
+    voiceMgmt.setVoiceLimit(getOptions()->getIntOption("voice_limit", 16));
 
     srand((int)time(NULL));
     int sampleRate = (int)this->getSampleRate();
@@ -117,7 +128,7 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
 
         name = "Wavetable Window";
         shortName = groupPrefix + "WtW";
-        addParameter(name, shortName, createId(group, PARAM_WT_WIN), params->setWtWin());
+        addParameter(name, shortName, createId(group, PARAM_WT_WIN), params->setWtWin(), 0.0882);
 
         name = "Detune";
         shortName = groupPrefix + "Dtn";
@@ -168,6 +179,8 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
     addParameter("Envelope max length", "EnvLen", createId(PARAM_ENVELOPE_SPEED), voiceMgmt.getEnvelopeSpeedUpdater(), 3.0f / 29);
 
     addParameter("Filter type", "FltType", createId(PARAM_FILTER_TYPE), voiceMgmt.getFilterTypeUpdater());
+
+    addParameter("Cycle envelope", "CyclEnv", createId(PARAM_CYCLE_ENVELOPE), voiceMgmt.getCycleEnvelopeUpdater());
 
     addParameter("Volume", "Volume", createId(PARAM_PATCH_VOLUME), voiceMgmt.getVolumeUpdater(), 1.0f);
 }

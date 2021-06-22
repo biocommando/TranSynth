@@ -1,10 +1,8 @@
 #include "AdsrEnvelope.h"
 
-AdsrEnvelope::AdsrEnvelope()
+AdsrEnvelope::AdsrEnvelope() : cycleAttackDecay(false),
+                               endReached(true), sustain(0), stage(0)
 {
-    endReached = true;
-    sustain = 0;
-    stage = 0;
     stages.push_back(EnvelopeStage(true));
     stages.push_back(EnvelopeStage(true));
     stages.push_back(EnvelopeStage(false));
@@ -66,7 +64,11 @@ void AdsrEnvelope::calculateNext()
     }
     else if (stage < 3)
     {
-        triggerStage(stage + 1);
+        // If cycling A-D-S-A-D-S... at the end of decay stage, trigger attack again
+        if (cycleAttackDecay && stage == 1)
+            triggerStage(0);
+        else
+            triggerStage(stage + 1);
         calculateNext();
     }
     else
@@ -96,6 +98,7 @@ void AdsrEnvelope::triggerStage(int stage)
 void AdsrEnvelope::release()
 {
     releaseLevel = envelope;
+    releaseStage = stage;
     triggerStage(3);
 }
 
@@ -104,9 +107,10 @@ int AdsrEnvelope::getStage()
     return stage;
 }
 
-float AdsrEnvelope::getRatio()
+float AdsrEnvelope::getRatio(int xStage)
 {
-    return stages[stage].getRatio();
+    xStage = xStage == -1 ? stage : xStage;
+    return stages[xStage].getRatio();
 }
 
 float AdsrEnvelope::getEnvelope()

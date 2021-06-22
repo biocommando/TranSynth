@@ -1,4 +1,6 @@
 rem @echo off
+echo #pragma once > build.h
+echo #define BUILD_DATE "%date:* =% %time:,=.%" >> build.h
 g++ -c AdsrEnvelope.cpp -Ofast
 g++ -c BasicOscillator.cpp -Ofast
 g++ -c EnvelopeStage.cpp -Ofast

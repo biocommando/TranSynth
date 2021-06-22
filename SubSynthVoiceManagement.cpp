@@ -1,3 +1,4 @@
+#include "Options.h"
 #include "SubSynthVoiceManagement.h"
 #include <vector>
 #include <stdio.h>
@@ -12,6 +13,7 @@ constexpr int attackUpdaterId = 4;
 constexpr int decayUpdaterId = 5;
 constexpr int releaseUpdaterId = 6;
 constexpr int filterTypeUpdaterId = 7;
+constexpr int cycleEnvelopeUpdaterId = 8;
 
 #define FOR_ALL_VOICES(expr)                             \
     for (int vci = 0; vci < SS_VOICEMNGMT_VOICES; vci++) \
@@ -45,6 +47,9 @@ SubSynthVoiceManagement::SubSynthVoiceManagement() : counter(0)
     filterType.listener = this;
     filterType.id = filterTypeUpdaterId;
 
+    cycleEnvelope.listener = this;
+    cycleEnvelope.id = cycleEnvelopeUpdaterId;
+
     FOR_ALL_VOICES(voice->synth.setWavetable(wt));
 }
 
@@ -60,8 +65,13 @@ void generateBasicWavetable(float *wt, enum OscType t, float vol)
     }
 }
 
-void generateFmWavetable(float *wt, float ratioOp2, float mod2To1Amt, float ratioOp3, float mod3To2Amt)
+void generateFmWavetable(float *wt, int n)
 {
+    std::string keyBase = "fm_wt" + std::to_string(n) + "_p";
+    float ratioOp2 = getOptions()->getFloatOption(keyBase + "1");
+    float mod2To1Amt = getOptions()->getFloatOption(keyBase + "2");
+    float ratioOp3 = getOptions()->getFloatOption(keyBase + "3");
+    float mod3To2Amt = getOptions()->getFloatOption(keyBase + "4");
     float p0 = 0, p1 = 0, p2 = 0;
     const float f0 = 50, f1 = ratioOp2 * 50, f2 = ratioOp3 * 50;
     const float incrementBase = asin(1) * 4 / 44100;
@@ -96,8 +106,20 @@ void generateFmWavetable(float *wt, float ratioOp2, float mod2To1Amt, float rati
     }
 }
 
-void generateAdditWavetable(float *wt, const float *freqs, const float *amplitudes)
+void generateAdditWavetable(float *wt, int n)
 {
+    std::string keyBase = "ad_wt" + std::to_string(n) + "_";
+    auto opts = getOptions();
+
+    const float freqs[] = {opts->getFloatOption(keyBase + "f1"),
+                           opts->getFloatOption(keyBase + "f2"),
+                           opts->getFloatOption(keyBase + "f3"),
+                           opts->getFloatOption(keyBase + "f4"), -1};
+    const float amplitudes[] = {opts->getFloatOption(keyBase + "a1"),
+                                opts->getFloatOption(keyBase + "a2"),
+                                opts->getFloatOption(keyBase + "a3"),
+                                opts->getFloatOption(keyBase + "a4")};
+
     std::vector<float> phases;
     float volmult = 0;
     for (int i = 0; freqs[i] > 0; i++)
@@ -155,73 +177,30 @@ void generatePwmWavetable(float *wt)
 
 void SubSynthVoiceManagement::generateWavetable(int id)
 {
-    switch (id)
-    {
-    case 0:
+    if (id == 0)
         generateBasicWavetable(wt, OSC_SINE, sqrt(2));
-        break;
-    case 1:
+    else if (id == 1)
         generateBasicWavetable(wt, OSC_TRIANGLE, sqrt(3));
-        break;
-    case 2:
+    else if (id == 2)
         generateBasicWavetable(wt, OSC_SQUARE, 1);
-        break;
-    case 3:
+    else if (id == 3)
         generateBasicWavetable(wt, OSC_SAW, sqrt(3));
-        break;
-    case 4:
-        generateFmWavetable(wt, 4, 0.02, 1, 0.05);
-        break;
-    case 5:
-        generateFmWavetable(wt, 6, 0.02, 8, 0.1);
-        break;
-    case 6:
-        generateFmWavetable(wt, 3, 0.03, 7, 0.1);
-        break;
-    case 7:
-        generateFmWavetable(wt, sqrt(3), 0.05, 0.5, 0.1);
-        break;
-    case 8:
+    else if (id >= 4 && id <= 7)
+        generateFmWavetable(wt, id - 3);
+    else if (id >= 8 && id <= 11)
     {
         const float freqs[] = {50, 100, 150, 200, -1};
         const float amplitudes[] = {1, 0.5, 0.5, 0.25};
-        generateAdditWavetable(wt, freqs, amplitudes);
+        generateAdditWavetable(wt, id - 7);
     }
-    break;
-    case 9:
-    {
-        const float freqs[] = {50, 75, 150, 250, -1};
-        const float amplitudes[] = {1, 0.5, 1, 0.7};
-        generateAdditWavetable(wt, freqs, amplitudes);
-    }
-    break;
-    case 10:
-    {
-        const float freqs[] = {50, 200, 400, 1200, -1};
-        const float amplitudes[] = {1, 0.8, 0.6, 0.4};
-        generateAdditWavetable(wt, freqs, amplitudes);
-    }
-    break;
-    case 11:
-    {
-        const float freqs[] = {50, 52, -1};
-        const float amplitudes[] = {1, 1};
-        generateAdditWavetable(wt, freqs, amplitudes);
-    }
-    break;
-    case 12:
+    else if (id == 12)
         generateSweepWavetable(wt, OSC_SINE);
-        break;
-    case 13:
+    else if (id == 13)
         generateSweepWavetable(wt, OSC_SAW);
-        break;
-    case 14:
+    else if (id == 14)
         generateSweepWavetable(wt, OSC_SQUARE);
-        break;
-    case 15:
+    else if (id == 15)
         generatePwmWavetable(wt);
-        break;
-    }
 }
 
 void SubSynthVoiceManagement::onParamUpdated(int id, float value)
@@ -283,6 +262,11 @@ void SubSynthVoiceManagement::onParamUpdated(int id, float value)
         }
     }
     break;
+    case cycleEnvelopeUpdaterId:
+    {
+        FOR_ALL_VOICES(voice->envelope.setCycleOnOff(value > 0.5));
+    }
+    break;
     }
 }
 
@@ -313,12 +297,14 @@ void SubSynthVoiceManagement::onUpdate()
 
 void SubSynthVoiceManagement::updateSynthParams()
 {
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
+    for (int i = 0; i < voiceLimit; i++)
     {
-        if (voices[i].active)
+        auto voice = &voices[i];
+        if (voice->active)
         {
-            const int envStage = voices[i].envelope.getStage();
-            const float envRatio = voices[i].envelope.getRatio();
+            auto envelope = &voice->envelope;
+            const auto envStage = envelope->getStage();
+            auto envRatio = envelope->getRatio();
             switch (envStage)
             {
             case 0:
@@ -331,13 +317,30 @@ void SubSynthVoiceManagement::updateSynthParams()
                 interpolated.fromParams(params[2]);
                 break;
             case 3:
-                interpolated.paramValuesFromInterpolatedParams(params[2], params[3], envRatio);
+                const auto releaseStage = envelope->getReleaseStage();
+                if (releaseStage < 2)
+                {
+                    interpolated.paramValuesFromInterpolatedParams(params[releaseStage], params[releaseStage + 1], envelope->getRatio(releaseStage));
+                    //envRatio = envelope->getRatio(releaseStage) + (1 - envelope->getRatio(releaseStage)) * envRatio;
+                    // envRatio = (1 - envRatio) * envelope->getRatio(releaseStage) + envRatio;
+                    interpolated.paramValuesFromInterpolatedParams(interpolated, params[3], envRatio);
+                }
+                else
+                {
+                    interpolated.paramValuesFromInterpolatedParams(params[releaseStage], params[3], envRatio);
+                }
                 break;
             }
             voices[i].synth.getParams()->fromParams(interpolated);
             voices[i].synth.setWavetablePos(wtPos.value);
         }
     }
+}
+
+void SubSynthVoiceManagement::setVoiceLimit(int limit)
+{
+    if (limit > 0 && limit < SS_VOICEMNGMT_VOICES)
+        voiceLimit = limit;
 }
 
 bool SubSynthVoiceManagement::isStereoEnabled()
@@ -348,7 +351,7 @@ bool SubSynthVoiceManagement::isStereoEnabled()
 void SubSynthVoiceManagement::calculateNext()
 {
     updateSynthParams();
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
+    for (int i = 0; i < voiceLimit; i++)
     {
         if (voices[i].active)
         {
@@ -370,7 +373,7 @@ void SubSynthVoiceManagement::getValue(float *ch1, float *ch2)
 {
     const auto patchVolume = volume.value;
     *ch1 = *ch2 = 0;
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
+    for (int i = 0; i < voiceLimit; i++)
     {
         if (voices[i].active)
         {
@@ -406,7 +409,7 @@ void SubSynthVoiceManagement::noteOn(int midiNote, int velocity)
 void SubSynthVoiceManagement::noteOn(float midiNote, int noteNumber, int velocity, int channel)
 {
     int lowestCounterIndex = 0;
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
+    for (int i = 0; i < voiceLimit; i++)
     {
         if (!voices[i].active)
         {
@@ -438,7 +441,7 @@ void SubSynthVoiceManagement::activateVoice(int voiceIndex, float midiNote, int 
 
 void SubSynthVoiceManagement::noteOff(int midiNote)
 {
-    for (int i = 0; i < SS_VOICEMNGMT_VOICES; i++)
+    for (int i = 0; i < voiceLimit; i++)
     {
         if (voices[i].midiNote == midiNote)
         {

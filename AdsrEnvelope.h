@@ -4,8 +4,9 @@
 class AdsrEnvelope
 {
     std::vector<EnvelopeStage> stages;
-    int stage;
+    int stage, releaseStage;
     bool endReached;
+    bool cycleAttackDecay;
     float sustain, releaseLevel;
     float envelope;
     void triggerStage(int stage);
@@ -14,15 +15,18 @@ public:
     void setAttack(int samples);
     void setDecay(int samples);
     void setSustain(float level);
+    float getSustain() { return sustain; }
     void setRelease(int samples);
     void setStageMaxLength(float length);
+    void setCycleOnOff(bool on) { cycleAttackDecay = on; }
 
     void calculateNext();
     void trigger();
     void release();
 
     int getStage();
-    float getRatio();
+    int getReleaseStage() { return releaseStage; }
+    float getRatio(int stage = -1);
     float getEnvelope();
     bool ended();
 
