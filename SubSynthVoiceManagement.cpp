@@ -188,11 +188,7 @@ void SubSynthVoiceManagement::generateWavetable(int id)
     else if (id >= 4 && id <= 7)
         generateFmWavetable(wt, id - 3);
     else if (id >= 8 && id <= 11)
-    {
-        const float freqs[] = {50, 100, 150, 200, -1};
-        const float amplitudes[] = {1, 0.5, 0.5, 0.25};
         generateAdditWavetable(wt, id - 7);
-    }
     else if (id == 12)
         generateSweepWavetable(wt, OSC_SINE);
     else if (id == 13)
@@ -320,9 +316,9 @@ void SubSynthVoiceManagement::updateSynthParams()
                 const auto releaseStage = envelope->getReleaseStage();
                 if (releaseStage < 2)
                 {
+                    // First calculate the state where the voice was left just before release
                     interpolated.paramValuesFromInterpolatedParams(params[releaseStage], params[releaseStage + 1], envelope->getRatio(releaseStage));
-                    //envRatio = envelope->getRatio(releaseStage) + (1 - envelope->getRatio(releaseStage)) * envRatio;
-                    // envRatio = (1 - envRatio) * envelope->getRatio(releaseStage) + envRatio;
+                    // Then interpolate the parameters between that state and the final stage
                     interpolated.paramValuesFromInterpolatedParams(interpolated, params[3], envRatio);
                 }
                 else
