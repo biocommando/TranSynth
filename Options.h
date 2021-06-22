@@ -20,6 +20,8 @@ public:
                 continue;
 
             auto pos = s.find_first_of('=');
+            if (pos == std::string::npos)
+                continue;
             opts.push_back(std::pair<std::string, std::string>(
                 s.substr(0, pos), s.substr(pos + 1)));
         }
