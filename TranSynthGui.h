@@ -37,8 +37,6 @@ constexpr int tagGroupedParam = 201;
 constexpr int tagGlobalParam = 202;
 constexpr int tagPresetNameEdit = 301;
 
-extern void logf(const char *, float);
-
 extern CColor gold, bggray;
 
 extern std::string workDir;
@@ -272,7 +270,7 @@ public:
         xframe->addView(linkModeList);
 
         const int groupedParams[] = {
-            PARAM_TRI, PARAM_SAW, PARAM_SQR, PARAM_WT_MIX, PARAM_WT_WIN, PARAM_DETUNE,
+            PARAM_TRI, PARAM_SAW, PARAM_SQR, PARAM_WT_MIX, PARAM_WT_WIN, PARAM_DETUNE, PARAM_NOISE_AMOUNT,
             PARAM_DISTORTION, PARAM_CUTOFF, PARAM_RESONANCE, PARAM_LFO_FREQ, PARAM_LFO_TO_CUTOFF,
             PARAM_LFO_TO_PITCH, PARAM_VOLUME, -1};
         const char stageNames[][20] = {
@@ -356,8 +354,6 @@ public:
         macroActionList->addEntry(new CMenuItem("Macros...", 1 << 1));
         macroActionList->addEntry(new CMenuItem("Quantize wavetable windows"));
         xframe->addView(macroActionList);
-
-        
 
         ADD_TEXT("v 1.0 build " BUILD_DATE, 14, 8.25, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
         ADD_TEXT("(c) 2017-2021 Joonas Salonpaa", 14, 8.5, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));

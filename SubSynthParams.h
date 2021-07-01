@@ -5,7 +5,7 @@
 #include "SubSynthParam.h"
 #include "CallbackUpdatable.h"
 
-#define NUM_SUB_SYNTH_PARAMS 13
+#define NUM_SUB_SYNTH_PARAMS 14
 
 class SubSynthParams : CallbackUpdatable
 {
@@ -26,6 +26,7 @@ public:
     float getDistortion();
     float getWtMix();
     float getWtWin();
+    float getNoiseAmount();
 
     CallbackUpdatable *setTriAmount();
     CallbackUpdatable *setSawAmount();
@@ -40,6 +41,7 @@ public:
     CallbackUpdatable *setDistortion();
     CallbackUpdatable *setWtMix();
     CallbackUpdatable *setWtWin();
+    CallbackUpdatable *setNoiseAmount();
 
     void setOnParamsChanged(CallbackUpdatable *callbackUpdatable);
 

@@ -47,7 +47,6 @@ int ParameterHolder::serialize(char **writeBuffer, const char *header, int heade
     return s.size() + headerSize;
 }
 
-extern void logf(const char *, float);
 std::string ParameterHolder::serializeToString()
 {
     char tempBuf[100];

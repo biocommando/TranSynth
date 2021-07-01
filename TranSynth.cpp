@@ -3,6 +3,7 @@
 #include "Options.h"
 #include "TranSynth.h"
 #include "TranSynthGui.h"
+#include "Log.h"
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -49,24 +50,6 @@ AudioEffect *createEffectInstance(audioMasterCallback audioMaster)
     return new TranSynth(audioMaster);
 }
 
-//#define DEBUG_LOG
-void log(const char *s)
-{
-#ifdef DEBUG_LOG
-    FILE *f = fopen("D:\\translog.txt", "a");
-    fprintf(f, "%s\n", s);
-    fclose(f);
-#endif
-}
-void logf(const char *s, float ff)
-{
-#ifdef DEBUG_LOG
-    FILE *f = fopen("D:\\translog.txt", "a");
-    fprintf(f, "%s: %f\n", s, ff);
-    fclose(f);
-#endif
-}
-
 int createId(int group, int param)
 {
     if (group == -1)
@@ -83,8 +66,27 @@ int createId(int param)
 
 Options *getOptions()
 {
+    static bool initDone = false;
     static Options options;
+    if (!initDone)
+    {
+        resolveWorkDir();
+        options.read(workDir + "\\options.ini");
+        initDone = true;
+    }
     return &options;
+}
+
+std::ofstream *getLogger()
+{
+    static bool initDone = false;
+    static std::ofstream file;
+    if (!initDone)
+    {
+        file.open(workDir + "\\log.txt");
+        initDone = true;
+    }
+    return &file;
 }
 
 TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS),
@@ -96,8 +98,6 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
     isSynth(true);
     programsAreChunks();
 
-    resolveWorkDir();
-    getOptions()->read(workDir + "\\options.ini");
     voiceMgmt.setVoiceLimit(getOptions()->getIntOption("voice_limit", 16));
 
     srand((int)time(NULL));
@@ -161,6 +161,10 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
         name = "Volume";
         shortName = groupPrefix + "Vol";
         addParameter(name, shortName, createId(group, PARAM_VOLUME), params->setVolume(), volumes[group]);
+
+        name = "Noise amount";
+        shortName = groupPrefix + "Noise";
+        addParameter(name, shortName, createId(group, PARAM_NOISE_AMOUNT), params->setNoiseAmount());
     }
 
     addParameter("Env. Attack (1->2)", "Attack", createId(PARAM_ATTACK), voiceMgmt.getAttackUpdater(), 0.05f);
@@ -217,7 +221,6 @@ TranSynth::~TranSynth()
 
 VstInt32 TranSynth::getChunk(void **data, bool isPreset)
 {
-    logf("getChunk", curProgram);
     if (chunk)
     {
         free(chunk);
@@ -247,8 +250,8 @@ VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
         {
             versionMajor = header[1];
             versionMinor = header[2];
-            logf("version maj", versionMajor);
-            logf("version min", versionMinor);
+            LOG_DEBUG("program load", "version maj", versionMajor);
+            LOG_DEBUG("program load", "version min", versionMinor);
         }
         parameterHolder.deserialize(buf + hdrSize);
     }

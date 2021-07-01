@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <math.h>
 
-extern void logf(const char *, float);
-
 constexpr int wtUpdaterId = 1;
 constexpr int lfoMaxRateId = 2;
 constexpr int envelopeSpeedId = 3;

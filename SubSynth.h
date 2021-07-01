@@ -6,16 +6,18 @@
 #include "VAStateVariableFilter.h"
 #include "SubSynthParams.h"
 #include "CallbackUpdatable.h"
+#include "NoiseGen.h"
+
 class SubSynth : CallbackUpdatable
 {
     BasicOscillator osc1;
     BasicOscillator osc2;
     BasicOscillator lfo;
+    NoiseGen noise;
     MS20Filter ms20Filter;
     MicrotrackerMoog moogFilter;
     HonestEarRapeFilter herFilter;
     VAStateVariableFilter svFilter;
-
     FilterBase *filter;
 
     SubSynthParams params;

@@ -65,6 +65,10 @@ float SubSynthParams::getWtWin()
 {
     return params[12].getValue();
 }
+float SubSynthParams::getNoiseAmount()
+{
+    return params[13].getValue();
+}
 
 CallbackUpdatable *SubSynthParams::setTriAmount()
 {
@@ -117,6 +121,10 @@ CallbackUpdatable *SubSynthParams::setWtMix()
 CallbackUpdatable *SubSynthParams::setWtWin()
 {
     return &params[12];
+}
+CallbackUpdatable *SubSynthParams::setNoiseAmount()
+{
+    return &params[13];
 }
 
 void SubSynthParams::setOnParamsChanged(CallbackUpdatable *callbackUpdatable)

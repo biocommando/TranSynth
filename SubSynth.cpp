@@ -27,6 +27,7 @@ void SubSynth::setSamplerate(int rate)
     osc2.setSamplerate(rate);
     lfo.setSamplerate(rate);
     filter->setSamplerate(rate);
+    noise.setSamplerate(rate);
 }
 
 void SubSynth::setFilterType(int type)
@@ -53,7 +54,7 @@ void SubSynth::setFilterType(int type)
 SubSynth::~SubSynth()
 {
 }
-extern void logf(char *, float);
+
 void SubSynth::updateParams()
 {
     noteFrequency1 = (float)(pow(2, (midiNote + params.getDetuneAmount()) / 12.0) * 8.1757989156);
@@ -72,6 +73,8 @@ void SubSynth::updateParams()
 
     osc1.setWaveTableParams(wtPos, params.getWtWin());
     osc2.setWaveTableParams(wtPos, params.getWtWin());
+
+    noise.setAmount(params.getNoiseAmount());
 }
 
 void SubSynth::setWavetablePos(float pos)
@@ -164,6 +167,8 @@ void SubSynth::calculateNext()
         oscOutput += getOscValue(OSC_WT) * oscAmount;
 
     oscOutput *= 0.5f;
+
+    oscOutput += noise.get();
 
     filter->setModulation(lfoToCutoff * lfoValue + externalCutoffModulation);
     const float filterOutput = filter->calculate(oscOutput);

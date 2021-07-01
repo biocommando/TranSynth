@@ -4,8 +4,6 @@
 #include <math.h>
 constexpr int wtSize = 10000;
 
-extern void logf(const char *, float);
-
 BasicOscillator::BasicOscillator(int sampleRate) : phase(0), hzToF(1.0f / (float)sampleRate),
                                                    frequency(0), wtPos(0), wtWindow(0)
 {

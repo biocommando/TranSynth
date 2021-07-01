@@ -21,6 +21,7 @@
 #define PARAM_DISTORTION 10
 #define PARAM_WT_MIX 11
 #define PARAM_WT_WIN 12
+#define PARAM_NOISE_AMOUNT 13
 #define GROUPLESS_PARAM(param) (10000 + (param))
 #define PARAM_ATTACK 0
 #define PARAM_DECAY 1
@@ -35,7 +36,7 @@
 #define PARAM_ENVELOPE_SPEED 10
 #define PARAM_FILTER_TYPE 11
 #define PARAM_CYCLE_ENVELOPE 12
-#define NUM_PARAMS 65
+#define NUM_PARAMS 69
 
 class PresetManager
 {

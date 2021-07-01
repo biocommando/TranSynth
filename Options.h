@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "Log.h"
 
 class Options
 {
@@ -30,10 +31,12 @@ public:
 
     std::string getOption(const std::string &key, const std::string &defaultValue = "")
     {
+        LOG_DEBUG("options", "Requesting key %s", key.c_str());
         for (int i = opts.size() - 1; i >= 0; i--)
         {
             if (opts[i].first == key)
             {
+                LOG_DEBUG("options", "Found key %s = %s", key.c_str(), opts[i].second.c_str());
                 return opts[i].second;
             }
         }
