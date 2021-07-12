@@ -202,21 +202,6 @@ void TranSynth::open()
 
 TranSynth::~TranSynth()
 {
-    /*if (chunk)
-    {
-        free(chunk);
-    }
-
-    FILE *f = fopen("D:\\transyn-latest-pgm.txt", "w");
-    fprintf(f, "{ NUMBER\n$ NAME\n");
-
-    for (int i = 0; i < NUM_PARAMS; i++)
-    {
-        auto p = parameterHolder.getParameterByIndex(i);
-        fprintf(f, "+ %d %f\n", p->getId(), p->getValue());
-    }
-    fprintf(f, "}\n");
-    fclose(f);*/
 }
 
 VstInt32 TranSynth::getChunk(void **data, bool isPreset)
@@ -225,13 +210,23 @@ VstInt32 TranSynth::getChunk(void **data, bool isPreset)
     {
         free(chunk);
     }
-    char header[] = "HssVvv";
-    short hdrSize = 1 + sizeof(short) + 1 + 2;
+    const auto pgmName = getPresetManager()->getProgramName();
+    const short nameHdrSize = 2 + pgmName.size();
+    short hdrSize = 1 + sizeof(short) + 1 + 2 + nameHdrSize;
+    char *header = (char*)malloc(hdrSize);
+    header[0] = 'H';
     memcpy(header + 1, &hdrSize, sizeof(short));
+    header[3] = 'V';
     header[4] = MAJOR_VERSION;
     header[5] = MINOR_VERSION;
 
+    header[6] = 'N';
+    const unsigned char pgmNameLen = pgmName.size();
+    memcpy(header + 7, &pgmNameLen, 1);
+    memcpy(header + 8, pgmName.c_str(), pgmNameLen);
+
     auto ret = parameterHolder.serialize((char **)data, header, hdrSize);
+    free(header);
     chunk = *(char **)data;
     return ret;
 }
@@ -252,6 +247,20 @@ VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
             versionMinor = header[2];
             LOG_DEBUG("program load", "version maj", versionMajor);
             LOG_DEBUG("program load", "version min", versionMinor);
+        }
+        if (hdrSize > 6 && header[3] == 'N')
+        {
+            unsigned char pgmNameLen;
+            memcpy(&pgmNameLen, header + 4, 1);
+            char pgmName[256];
+            memcpy(pgmName, header + 5, pgmNameLen);
+            std::string strPgmName(pgmName, pgmNameLen);
+            getPresetManager()->setProgramName(strPgmName);
+            LOG_DEBUG("setChunk", "Program name: %s", strPgmName.c_str());
+            if (editor)
+            {
+                ((TranSynthGui*)editor)->notifyCurrentPresetNameChanged();
+            }
         }
         parameterHolder.deserialize(buf + hdrSize);
     }
@@ -445,6 +454,8 @@ bool PresetManager::readProgram(int number, std::string &name, bool readNameOnly
             name.assign(&buf[2]);
             if (readNameOnly)
                 break;
+            if (doLoadProgram)
+                curProgramName = name;
         }
 
         if (cmd == '}')
@@ -494,6 +505,7 @@ std::string PresetManager::readProgram(int number)
 
 void PresetManager::saveProgram(int number, const std::string &name)
 {
+    curProgramName = name;
     std::string presetTmpFileName = std::string(workDir) + "\\" + "TranSynPresets.tmp";
     FILE *tmp = fopen(presetTmpFileName.c_str(), "w");
 

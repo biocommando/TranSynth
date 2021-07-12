@@ -44,6 +44,7 @@ private:
     ParameterHolder &parameterHolder;
     std::string fileName;
     FILE *f = nullptr;
+    std::string curProgramName;
     void init();
     void openFile(int rw);
     void closeFile();
@@ -65,6 +66,10 @@ public:
     {
         init();
     }
+
+    void setProgramName(const std::string &name) { curProgramName = name; }
+
+    std::string getProgramName() { return curProgramName; }
 };
 
 class TranSynth : public AudioEffectX
@@ -74,7 +79,6 @@ private:
     PresetManager presetManager;
     SubSynthVoiceManagement voiceMgmt;
     char *chunk = nullptr;
-    char curProgramName[24];
 
     void addParameter(const std::string &name, const std::string &shortName, int id,
                       CallbackUpdatable *cu, float defaultValue = 0);

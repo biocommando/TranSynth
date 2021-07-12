@@ -480,4 +480,14 @@ public:
             currentPresetName.assign(name);
         }
     }
+
+    void notifyCurrentPresetNameChanged()
+    {
+        if (synth()->getPresetManager()->getProgramName() != "")
+        {
+            currentPresetName = synth()->getPresetManager()->getProgramName();
+            if (currentPresetNameEdit)
+                currentPresetNameEdit->setText(currentPresetName.c_str());
+        }
+    }
 };
