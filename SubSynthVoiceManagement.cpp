@@ -422,14 +422,15 @@ void SubSynthVoiceManagement::noteOn(float midiNote, int noteNumber, int velocit
 void SubSynthVoiceManagement::activateVoice(int voiceIndex, float midiNote, int noteNumber, int velocity, int channel)
 {
     const float vel1 = velocity / 127.0f;
-    voices[voiceIndex].midiNote = noteNumber;
-    voices[voiceIndex].active = true;
-    voices[voiceIndex].synth.setNoteFrequency(midiNote);
-    voices[voiceIndex].synth.setExternalCutoffModulation(vel1 * velocityToFilter.value);
-    voices[voiceIndex].envelope.trigger();
-    voices[voiceIndex].velocity = vel1;
-    voices[voiceIndex].counter = nextCounter();
-    voices[voiceIndex].channel = channel;
+    auto voice = &voices[voiceIndex];
+    voice->midiNote = noteNumber;
+    voice->active = true;
+    voice->synth.setNoteFrequency(midiNote);
+    voice->synth.setExternalCutoffModulation(vel1 * velocityToFilter.value);
+    voice->envelope.trigger();
+    voice->velocity = vel1;
+    voice->counter = nextCounter();
+    voice->channel = channel;
     updateSynthParams();
 }
 

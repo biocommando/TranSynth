@@ -21,12 +21,12 @@ void SubSynthParam::onUpdateWithValue(float value)
     onUpdate->onUpdate();
 }
 
-float SubSynthParam::getValue()
+/*float SubSynthParam::getValue()
 {
     return value;
-}
+}*/
 
-bool SubSynthParam::setValueBypassingCallback(float value)
+/*bool SubSynthParam::setValueBypassingCallback(float value)
 {
     if (this->value != value)
     {
@@ -34,4 +34,4 @@ bool SubSynthParam::setValueBypassingCallback(float value)
         return true;
     }
     return false;
-}
+}*/

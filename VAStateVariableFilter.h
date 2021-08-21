@@ -132,8 +132,11 @@ public:
     }
     void setModulation(float v)
     {
-        cutmod = v;
-        updateCutoff();
+        if (cutmod != v)
+        {
+            cutmod = v;
+            updateCutoff();
+        }
     }
     float calculate(float input)
     {

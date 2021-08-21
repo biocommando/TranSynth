@@ -26,6 +26,7 @@ class SubSynth : CallbackUpdatable
     float noteFrequency1;
     float noteFrequency2;
     float midiNote;
+    float midiNoteFreq;
     float lfoToPitch;
     float lfoToCutoff;
     float externalCutoffModulation = 0;
@@ -38,6 +39,9 @@ class SubSynth : CallbackUpdatable
     float distort(float value);
     float getOscValue(enum OscType osc);
     bool updated = false;
+
+    // Cached parameters:
+    float cachedDetuneAmount = -1;
 
 public:
     SubSynthParams *getParams();

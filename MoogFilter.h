@@ -53,8 +53,11 @@ public:
 
     void setModulation(float m)
     {
-        cutmod = m;
-        calculateCutoff();
+        if (cutmod != m)
+        {
+            cutmod = m;
+            calculateCutoff();
+        }
     }
 
     void reset()

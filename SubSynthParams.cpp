@@ -152,11 +152,18 @@ void SubSynthParams::paramValuesFromInterpolatedParams(SubSynthParams &p1, SubSy
     {
         const float v1 = p1.params[i].getValue();
         const float v2 = p2.params[i].getValue();
-        const float interPolatedValue = v1 + (v2 - v1) * ratio;
-        if (fabs(interPolatedValue - params[i].getValue()) > 1e-6)
+        if (v1 != v2)
         {
-            paramsDidChange = params[i].setValueBypassingCallback(interPolatedValue) || paramsDidChange;
+            const float interPolatedValue = v1 + (v2 - v1) * ratio;
+            if (fabs(interPolatedValue - params[i].getValue()) > 1e-6)
+            {
+                paramsDidChange = params[i].setValueBypassingCallback(interPolatedValue) || paramsDidChange;
+            }
         }
+        else
+        {
+            paramsDidChange = params[i].setValueBypassingCallback(v1);
+        } 
     }
     if (paramsDidChange)
         paramsChanged();

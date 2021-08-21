@@ -26,7 +26,6 @@ void SubSynth::setSamplerate(int rate)
     osc1.setSamplerate(rate);
     osc2.setSamplerate(rate);
     lfo.setSamplerate(rate);
-    //filter->setSamplerate(rate);
     ms20Filter.setSamplerate(rate);
     moogFilter.setSamplerate(rate);
     herFilter.setSamplerate(rate);
@@ -59,13 +58,38 @@ SubSynth::~SubSynth()
 {
 }
 
+inline static float detuneLookup(float v)
+{
+    static float lookup[8192 + 1];
+    static bool init = false;
+    if (!init)
+    {
+        init = true;
+        for (int i = 0; i < 8192 + 1; i++)
+        {
+            lookup[i] = pow(2, i / 8192.0 / 12);
+        }
+    }
+    return lookup[(int)(v * 8192)];
+}
+
 void SubSynth::updateParams()
 {
-    noteFrequency1 = (float)(pow(2, (midiNote + params.getDetuneAmount()) / 12.0) * 8.1757989156);
-    if (params.getDetuneAmount() > 0)
-        noteFrequency2 = (float)(pow(2, (midiNote - params.getDetuneAmount()) / 12.0) * 8.1757989156);
-    else
-        noteFrequency2 = noteFrequency1;
+    if (params.getDetuneAmount() != cachedDetuneAmount)
+    {
+        cachedDetuneAmount = params.getDetuneAmount();
+        const float detune = detuneLookup(cachedDetuneAmount);
+        if (cachedDetuneAmount > 0)
+        {
+            noteFrequency1 = midiNoteFreq * detune;
+            noteFrequency2 = midiNoteFreq / detune;
+        }
+        else
+        {
+            noteFrequency1 = midiNoteFreq;
+            noteFrequency2 = noteFrequency1;
+        }
+    }
 
     lfoToPitch = params.getLfoToPitchAmount();
     lfoToCutoff = params.getLfoToCutoffAmount();
@@ -102,6 +126,8 @@ void SubSynth::setLfoRange(float maxHz)
 void SubSynth::setNoteFrequency(float midiNote)
 {
     this->midiNote = midiNote;
+    midiNoteFreq = pow(2, midiNote / 12.0) * 8.1757989156;
+    cachedDetuneAmount = -1;  // This is reset so that the note frequency gets calculated
     filter->reset();
     osc1.randomizePhase();
     osc2.randomizePhase();
@@ -120,7 +146,9 @@ float SubSynth::distort(float value)
     const float d = params.getDistortion();
     if (d == 0)
         return value;
-    float distorted = value * value * (value > 0 ? 1.0f : -1.0f);
+    float distorted = value * value;
+    if (value < 0)
+        distorted = -distorted;
     distorted *= 200 * d * d;
     distorted = fmin(fmax(distorted, -1.0f), 1.0f);
     return distorted + value * (1.0f - d);
@@ -152,7 +180,8 @@ void SubSynth::calculateNext()
         updated = false;
     }
     lfo.calculateNext();
-    const float lfoValue = lfo.getValue(OSC_TRIANGLE);
+    const auto lfoValUsed = lfoToCutoff > 1e-6 || lfoToPitch > 1e-6;
+    const float lfoValue = lfoValUsed ? lfo.getValue(OSC_TRIANGLE) : 0;
 
     const float pitchMod = 1.0f - lfoValue * lfoToPitch;
     osc1.setFrequency(noteFrequency1 * pitchMod);
