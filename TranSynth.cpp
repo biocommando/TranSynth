@@ -90,8 +90,8 @@ std::ofstream *getLogger()
 }
 
 TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS),
-                                                        presetManager(parameterHolder), downsamplingFilterLeft(sampleRate, 4),
-                                                        downsamplingFilterRight(sampleRate, 4)
+                                                        presetManager(parameterHolder), downsamplingFilterLeft(0, 0),
+                                                        downsamplingFilterRight(0, 0)
 {
     setNumInputs(2);         // stereo in
     setNumOutputs(2);        // stereo out
@@ -101,6 +101,8 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
 
     voiceMgmt.setVoiceLimit(getOptions()->getIntOption("voice_limit", 16));
     oversampling = getOptions()->getIntOption("oversampling", 1);
+    downsamplingFilterLeft = MultistageLowpassFilter(sampleRate * oversampling, 4);
+    downsamplingFilterRight = MultistageLowpassFilter(sampleRate * oversampling, 4);
     downsamplingFilterLeft.update(sampleRate * 0.5f);
     downsamplingFilterRight.update(sampleRate * 0.5f);
 
