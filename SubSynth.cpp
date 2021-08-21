@@ -64,11 +64,11 @@ inline static float detuneLookup(float v)
     static bool init = false;
     if (!init)
     {
-        init = true;
         for (int i = 0; i < 8192 + 1; i++)
         {
             lookup[i] = pow(2, i / 8192.0 / 12);
         }
+        init = true;
     }
     return lookup[(int)(v * 8192)];
 }
