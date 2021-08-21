@@ -12,6 +12,7 @@
 #include <math.h>
 #include <time.h>
 #include <windows.h>
+#include <memory>
 
 std::string workDir;
 void resolveWorkDir()
@@ -219,20 +220,19 @@ VstInt32 TranSynth::getChunk(void **data, bool isPreset)
     const auto pgmName = getPresetManager()->getProgramName();
     const short nameHdrSize = 2 + pgmName.size();
     short hdrSize = 1 + sizeof(short) + 1 + 2 + nameHdrSize;
-    char *header = (char *)malloc(hdrSize);
+    auto header = std::make_unique<char[]>(hdrSize);
     header[0] = 'H';
-    memcpy(header + 1, &hdrSize, sizeof(short));
+    memcpy(header.get() + 1, &hdrSize, sizeof(short));
     header[3] = 'V';
     header[4] = MAJOR_VERSION;
     header[5] = MINOR_VERSION;
 
     header[6] = 'N';
     const unsigned char pgmNameLen = pgmName.size();
-    memcpy(header + 7, &pgmNameLen, 1);
-    memcpy(header + 8, pgmName.c_str(), pgmNameLen);
+    memcpy(header.get() + 7, &pgmNameLen, 1);
+    memcpy(header.get() + 8, pgmName.c_str(), pgmNameLen);
 
-    auto ret = parameterHolder.serialize((char **)data, header, hdrSize);
-    free(header);
+    auto ret = parameterHolder.serialize((char **)data, header.get(), hdrSize);
     chunk = *(char **)data;
     return ret;
 }
