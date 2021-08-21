@@ -26,7 +26,11 @@ void SubSynth::setSamplerate(int rate)
     osc1.setSamplerate(rate);
     osc2.setSamplerate(rate);
     lfo.setSamplerate(rate);
-    filter->setSamplerate(rate);
+    //filter->setSamplerate(rate);
+    ms20Filter.setSamplerate(rate);
+    moogFilter.setSamplerate(rate);
+    herFilter.setSamplerate(rate);
+    svFilter.setSamplerate(rate);
     noise.setSamplerate(rate);
 }
 

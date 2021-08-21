@@ -3,6 +3,7 @@
 #include "audioeffectx.h"
 #include "ParameterHolder.h"
 #include "SubSynthVoiceManagement.h"
+#include "Filter.h"
 
 #define MAJOR_VERSION 0
 #define MINOR_VERSION 0
@@ -78,6 +79,9 @@ private:
     ParameterHolder parameterHolder;
     PresetManager presetManager;
     SubSynthVoiceManagement voiceMgmt;
+    Filter downsamplingFilterLeft;
+    Filter downsamplingFilterRight;
+    int oversampling = 1;
     char *chunk = nullptr;
 
     void addParameter(const std::string &name, const std::string &shortName, int id,

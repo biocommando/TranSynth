@@ -23,12 +23,14 @@ void HonestEarRapeFilter::reset()
 
 inline float HonestEarRapeFilter::hpCoeff(float cutoff)
 {
-    return FILTER_CONST / (FILTER_CONST + cutoff);
+    const auto cutFreqHz = cutoff * 0.5f * 44100;
+    return 1.0f / (2.0f * 3.14159265f * 1.0f / sampleRate * cutFreqHz + 1.0f);
 }
 
 inline float HonestEarRapeFilter::lpCoeff(float cutoff)
 {
-    return cutoff / (FILTER_CONST + cutoff);
+    const auto cutFreqHz = cutoff * 0.5f * 44100;
+    return 1.0f / (1.0f / (2.0f * 3.14159265f * 1.0f / sampleRate * cutFreqHz) + 1.0f);
 }
 
 static inline float calculateLpFilter(float *filter, float input, float cutoff)
@@ -54,20 +56,25 @@ float HonestEarRapeFilter::hardClip(float input)
     return input;
 }
 
+void HonestEarRapeFilter::updateCutoff()
+{
+    float modulatedCutoff = cutoff + cutoffModulation;
+    modulatedCutoff = modulatedCutoff < 0 ? 0 : modulatedCutoff;
+    const float cutoffLAHA = modulatedCutoff * 0.5f + 0.002f;
+    const float cutoffLB = cutoffLAHA * 0.5f;
+
+    cutoffCoeffLA = lpCoeff(cutoffLAHA);
+    cutoffCoeffLB = lpCoeff(cutoffLB);
+    cutoffCoeffHA = hpCoeff(cutoffLAHA);
+}
+
 float HonestEarRapeFilter::calculate(float input)
 {
     const int LA0 = 0, LA1 = 1, LB0 = 2, LB1 = 3, HA = 4, TOTAL = 6;
 
     if (++cutCalcCounter == 16)
     {
-        float modulatedCutoff = cutoff + cutoffModulation;
-        modulatedCutoff = modulatedCutoff < 0 ? 0 : modulatedCutoff;
-        const float cutoffLAHA = modulatedCutoff * 0.5f + 0.002f;
-        const float cutoffLB = cutoffLAHA * 0.5f;
-
-        cutoffCoeffLA = lpCoeff(cutoffLAHA);
-        cutoffCoeffLB = lpCoeff(cutoffLB);
-        cutoffCoeffHA = hpCoeff(cutoffLAHA);
+        updateCutoff();
 
         cutCalcCounter = 0;
     }
@@ -101,7 +108,7 @@ float HonestEarRapeFilter::calculate(float input)
 
 void HonestEarRapeFilter::setCutoff(float value)
 {
-    cutoff = value * 44100.0 / sampleRate;
+    cutoff = value;
     if (cutoff < 0)
         cutoff = 0;
 }

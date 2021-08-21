@@ -32,10 +32,10 @@ public:
         p33 = p32;
         p32 = p3;
 
-        p0 += (fast_tanh(x - k * out) - fast_tanh(p0)) * cutoff;
-        p1 += (fast_tanh(p0) - fast_tanh(p1)) * cutoff;
-        p2 += (fast_tanh(p1) - fast_tanh(p2)) * cutoff;
-        p3 += (fast_tanh(p2) - fast_tanh(p3)) * cutoff;
+        p0 += (fast_tanh(x - k * out) - fast_tanh(p0)) * coCalc;
+        p1 += (fast_tanh(p0) - fast_tanh(p1)) * coCalc;
+        p2 += (fast_tanh(p1) - fast_tanh(p2)) * coCalc;
+        p3 += (fast_tanh(p2) - fast_tanh(p3)) * coCalc;
 
         return out;
     }
@@ -65,6 +65,7 @@ public:
     void setSamplerate(int sr)
     {
         sampleRate = sr;
+        calculateCutoff();
     }
 
 private:
@@ -77,7 +78,7 @@ private:
     void calculateCutoff()
     {
         coCalc = cutoff + cutmod;
-        coCalc = coCalc * 6.28318530717 * 1000 / sampleRate;
+        coCalc = coCalc * 44100 / sampleRate;// 6.28318530717 * 1000 / sampleRate;
         coCalc = coCalc > 1 ? 1 : (coCalc < 0 ? 0 : coCalc);
     }
 

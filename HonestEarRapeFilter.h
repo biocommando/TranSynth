@@ -23,13 +23,19 @@ private:
     float lpCoeff(float cutoff);
     float hpCoeff(float cutoff);
 
+    void updateCutoff();
+
 public:
     void setCutoff(float value);
     void setModulation(float value);
     void setResonance(float value);
     void reset();
     float calculate(float input);
-    void setSamplerate(int sampleRate) { this->sampleRate = sampleRate; }
+    void setSamplerate(int sampleRate)
+    {
+        this->sampleRate = sampleRate;
+        updateCutoff();
+    }
     HonestEarRapeFilter(float sampleRate);
     ~HonestEarRapeFilter();
 };

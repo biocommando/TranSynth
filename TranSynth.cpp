@@ -90,7 +90,8 @@ std::ofstream *getLogger()
 }
 
 TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS),
-                                                        presetManager(parameterHolder)
+                                                        presetManager(parameterHolder), downsamplingFilterLeft(sampleRate),
+                                                        downsamplingFilterRight(sampleRate)
 {
     setNumInputs(2);         // stereo in
     setNumOutputs(2);        // stereo out
@@ -99,10 +100,13 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
     programsAreChunks();
 
     voiceMgmt.setVoiceLimit(getOptions()->getIntOption("voice_limit", 16));
+    oversampling = getOptions()->getIntOption("oversampling", 1);
+    downsamplingFilterLeft.updateLowpass(sampleRate * 0.5f);
+    downsamplingFilterRight.updateLowpass(sampleRate * 0.5f);
 
     srand((int)time(NULL));
     int sampleRate = (int)this->getSampleRate();
-    voiceMgmt.setSampleRate(sampleRate);
+    voiceMgmt.setSampleRate(sampleRate * oversampling);
     const float volumes[] = {1, 1, 0.5, 0};
 
     for (int group = 0; group < 4; group++)
@@ -213,7 +217,7 @@ VstInt32 TranSynth::getChunk(void **data, bool isPreset)
     const auto pgmName = getPresetManager()->getProgramName();
     const short nameHdrSize = 2 + pgmName.size();
     short hdrSize = 1 + sizeof(short) + 1 + 2 + nameHdrSize;
-    char *header = (char*)malloc(hdrSize);
+    char *header = (char *)malloc(hdrSize);
     header[0] = 'H';
     memcpy(header + 1, &hdrSize, sizeof(short));
     header[3] = 'V';
@@ -259,7 +263,7 @@ VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
             LOG_DEBUG("setChunk", "Program name: %s", strPgmName.c_str());
             if (editor)
             {
-                ((TranSynthGui*)editor)->notifyCurrentPresetNameChanged();
+                ((TranSynthGui *)editor)->notifyCurrentPresetNameChanged();
             }
         }
         parameterHolder.deserialize(buf + hdrSize);
@@ -401,8 +405,14 @@ void TranSynth::processReplacing(float **inputs, float **outputs, VstInt32 sampl
     float ch1, ch2;
     for (int i = 0; i < sampleFrames; i++)
     {
-        voiceMgmt.calculateNext();
-        voiceMgmt.getValue(&ch1, &ch2);
+        for (int j = 0; j < oversampling; j++)
+        {
+            voiceMgmt.calculateNext();
+            voiceMgmt.getValue(&ch1, &ch2);
+            ch1 = downsamplingFilterLeft.processLowpass(ch1);
+            if (stereo)
+                ch2 = downsamplingFilterRight.processLowpass(ch2);
+        }
         outputs[0][i] = ch1;
         if (stereo)
             outputs[1][i] = ch2;
