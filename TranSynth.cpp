@@ -90,8 +90,8 @@ std::ofstream *getLogger()
 }
 
 TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS),
-                                                        presetManager(parameterHolder), downsamplingFilterLeft(sampleRate),
-                                                        downsamplingFilterRight(sampleRate)
+                                                        presetManager(parameterHolder), downsamplingFilterLeft(sampleRate, 4),
+                                                        downsamplingFilterRight(sampleRate, 4)
 {
     setNumInputs(2);         // stereo in
     setNumOutputs(2);        // stereo out
@@ -101,8 +101,8 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
 
     voiceMgmt.setVoiceLimit(getOptions()->getIntOption("voice_limit", 16));
     oversampling = getOptions()->getIntOption("oversampling", 1);
-    downsamplingFilterLeft.updateLowpass(sampleRate * 0.5f);
-    downsamplingFilterRight.updateLowpass(sampleRate * 0.5f);
+    downsamplingFilterLeft.update(sampleRate * 0.5f);
+    downsamplingFilterRight.update(sampleRate * 0.5f);
 
     srand((int)time(NULL));
     int sampleRate = (int)this->getSampleRate();
@@ -409,9 +409,9 @@ void TranSynth::processReplacing(float **inputs, float **outputs, VstInt32 sampl
         {
             voiceMgmt.calculateNext();
             voiceMgmt.getValue(&ch1, &ch2);
-            ch1 = downsamplingFilterLeft.processLowpass(ch1);
+            ch1 = downsamplingFilterLeft.process(ch1);
             if (stereo)
-                ch2 = downsamplingFilterRight.processLowpass(ch2);
+                ch2 = downsamplingFilterRight.process(ch2);
         }
         outputs[0][i] = ch1;
         if (stereo)

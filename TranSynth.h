@@ -79,8 +79,8 @@ private:
     ParameterHolder parameterHolder;
     PresetManager presetManager;
     SubSynthVoiceManagement voiceMgmt;
-    Filter downsamplingFilterLeft;
-    Filter downsamplingFilterRight;
+    MultistageLowpassFilter downsamplingFilterLeft;
+    MultistageLowpassFilter downsamplingFilterRight;
     int oversampling = 1;
     char *chunk = nullptr;
 
