@@ -92,7 +92,7 @@ std::ofstream *getLogger()
 
 TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS),
                                                         presetManager(parameterHolder), downsamplingFilterLeft(0, 0),
-                                                        downsamplingFilterRight(0, 0)
+                                                        downsamplingFilterRight(0, 0), scriptCaller("scripts.txt")
 {
     setNumInputs(2);         // stereo in
     setNumOutputs(2);        // stereo out
@@ -102,75 +102,69 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
 
     voiceMgmt.setVoiceLimit(getOptions()->getIntOption("voice_limit", 16));
     oversampling = getOptions()->getIntOption("oversampling", 1);
-    downsamplingFilterLeft = MultistageLowpassFilter(sampleRate * oversampling, 4);
-    downsamplingFilterRight = MultistageLowpassFilter(sampleRate * oversampling, 4);
-    downsamplingFilterLeft.update(sampleRate * 0.5f);
-    downsamplingFilterRight.update(sampleRate * 0.5f);
 
     srand((int)time(NULL));
-    int sampleRate = (int)this->getSampleRate();
-    voiceMgmt.setSampleRate(sampleRate * oversampling);
     const float volumes[] = {1, 1, 0.5, 0};
 
     for (int group = 0; group < 4; group++)
     {
-        std::string groupPrefix = std::to_string(group + 1) + ":";
+        std::string groupSuffix = '@' + std::to_string(group + 1);
         auto params = voiceMgmt.getParams(group);
 
         auto name = "TRI Amount";
-        auto shortName = groupPrefix + "Tri";
+        auto shortName = "Tri" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_TRI), params->setTriAmount());
 
         name = "SAW Amount";
-        shortName = groupPrefix + "Saw";
+        shortName = "Saw" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_SAW), params->setSawAmount(), 1);
 
         name = "SQR Amount";
-        shortName = groupPrefix + "Sqr";
+        shortName = "Sqr" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_SQR), params->setSqrAmount());
 
         name = "Wavetable Amount";
-        shortName = groupPrefix + "Wt";
+        shortName = "Wt" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_WT_MIX), params->setWtMix());
 
         name = "Wavetable Window";
-        shortName = groupPrefix + "WtW";
+        shortName = "WtW" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_WT_WIN), params->setWtWin(), 0.0882);
 
         name = "Detune";
-        shortName = groupPrefix + "Dtn";
+        shortName = "Dtn" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_DETUNE), params->setDetuneAmount());
 
         name = "Filter Cutoff";
-        shortName = groupPrefix + "Cut";
+        shortName = "Cut" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_CUTOFF), params->setFilterCutoff(), 1);
 
         name = "Filter Resonance";
-        shortName = groupPrefix + "Res";
+        shortName = "Res" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_RESONANCE), params->setFilterResonance());
 
         name = "Distortion";
-        shortName = groupPrefix + "Dist";
+        shortName = "Dist" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_DISTORTION), params->setDistortion());
 
         name = "LFO Frequency";
-        shortName = groupPrefix + "LFO-f";
+        shortName = "LFO_f" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_LFO_FREQ), params->setLfoFrequency(), 0.2f);
 
         name = "LFO to Pitch";
-        shortName = groupPrefix + "ModPt";
+        shortName = "ModPt" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_LFO_TO_PITCH), params->setLfoToPitchAmount());
 
         name = "LFO to Filter";
-        shortName = groupPrefix + "ModFl";
+        shortName = "ModFl" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_LFO_TO_CUTOFF), params->setLfoToCutoffAmount());
 
         name = "Volume";
-        shortName = groupPrefix + "Vol";
+        shortName = "Vol" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_VOLUME), params->setVolume(), volumes[group]);
 
         name = "Noise amount";
-        shortName = groupPrefix + "Noise";
+        shortName = "Noise" + groupSuffix;
         addParameter(name, shortName, createId(group, PARAM_NOISE_AMOUNT), params->setNoiseAmount());
     }
 
@@ -204,6 +198,11 @@ void TranSynth::addParameter(const std::string &name, const std::string &shortNa
 
 void TranSynth::open()
 {
+    downsamplingFilterLeft = MultistageLowpassFilter(sampleRate * oversampling, 4);
+    downsamplingFilterRight = MultistageLowpassFilter(sampleRate * oversampling, 4);
+    downsamplingFilterLeft.update(sampleRate * 0.5f);
+    downsamplingFilterRight.update(sampleRate * 0.5f);
+    voiceMgmt.setSampleRate((int)sampleRate * oversampling);
     setEditor(new TranSynthGui(this));
 }
 

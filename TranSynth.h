@@ -4,6 +4,7 @@
 #include "ParameterHolder.h"
 #include "SubSynthVoiceManagement.h"
 #include "Filter.h"
+#include "ScriptCaller.h"
 
 #define MAJOR_VERSION 0
 #define MINOR_VERSION 0
@@ -76,6 +77,7 @@ public:
 class TranSynth : public AudioEffectX
 {
 private:
+    ScriptCaller scriptCaller;
     ParameterHolder parameterHolder;
     PresetManager presetManager;
     SubSynthVoiceManagement voiceMgmt;
@@ -110,6 +112,7 @@ public:
     VstInt32 processEvents(VstEvents *events);
     void open();
     PresetManager *getPresetManager() { return &presetManager; }
+    ScriptCaller *getScriptCaller() { return &scriptCaller; }
 };
 
 int createId(int group, int param);

@@ -353,6 +353,10 @@ public:
         setColors(macroActionList);
         macroActionList->addEntry(new CMenuItem("Macros...", 1 << 1));
         macroActionList->addEntry(new CMenuItem("Quantize wavetable windows"));
+        for (const auto &ep : synth()->getScriptCaller()->getEntryPoints())
+        {
+            macroActionList->addEntry(new CMenuItem(ep.c_str()));
+        }
         xframe->addView(macroActionList);
 
         ADD_TEXT("v 1.0 build " BUILD_DATE, 14, 8.25, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
@@ -438,6 +442,7 @@ public:
         else if (tag == tagMacroActionList)
         {
             const auto action = macroActionList->getCurrentIndex();
+            const auto title = macroActionList->getEntry(action)->getTitle();
             macroActionList->setCurrent(0);
             if (action == 1)
             {
@@ -450,6 +455,16 @@ public:
                     synth()->setParameterById(id, v);
                     setParameter(id, v);
                 }
+            }
+            else
+            {
+                std::map<std::string, double> extraParams;
+                 extraParams["link_mode_code"] = linkModeList->getCurrentIndex() - 1;
+                for (int i = 0; i < 4; i++)
+                {
+                    extraParams["link_mode@" + std::to_string(i + 1)] = linkMode[i];
+                }
+                synth()->getScriptCaller()->execute(title, synth(), &extraParams);
             }
         }
         else if (tag == tagGroupedParam || tag == tagGlobalParam)
