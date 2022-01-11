@@ -94,6 +94,7 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
                                                         presetManager(parameterHolder), downsamplingFilterLeft(0, 0),
                                                         downsamplingFilterRight(0, 0), scriptCaller("scripts.txt")
 {
+    hasEditor();
     setNumInputs(2);         // stereo in
     setNumOutputs(2);        // stereo out
     setUniqueID(-809164751); // identify
@@ -383,7 +384,7 @@ VstInt32 TranSynth::processEvents(VstEvents *events)
             continue;
         }
         VstMidiEvent *midievent = (VstMidiEvent *)(events->events[i]);
-        const char *midiMessage = midievent->midiData;
+        const unsigned char *midiMessage = midievent->midiData;
         if ((midiMessage[0] & 0xF0) == 0b10000000)
         {
             // Note off, key = midievent->midiData[1]

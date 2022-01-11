@@ -13,19 +13,17 @@ g++ -c SubSynthParams.cpp -Ofast
 g++ -c SubSynthVoiceManagement.cpp -Ofast
 g++ -c HonestEarRapeFilter.cpp -Ofast
 g++ -c VAStateVariableFilter.cpp -Ofast
-rem g++ -c VCMgmtEnvUpdater.cpp -Ofast
-rem g++ -c "D:\VST3 SDK\public.sdk\source\vst2.x\audioeffect.cpp" -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -o audioeffect.o -Ofast
-rem g++ -c "D:\VST3 SDK\public.sdk\source\vst2.x\audioeffectx.cpp" -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -o audioeffectx.o -Ofast
-rem g++ -c "D:\VST3 SDK\public.sdk\source\vst2.x\vstplugmain.cpp" -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -o vstplugmain.o -Ofast
-rem g++ -c "D:\VST3 SDK\vstgui.sf\vstgui\aeffguieditor.cpp" -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -o aeffguieditor.o
-rem g++ -c "D:\VST3 SDK\vstgui.sf\vstgui\vstgui.cpp" -DWIN32 -trigraphs -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -o vstgui.o
-rem g++ -c "D:\VST3 SDK\vstgui.sf\vstgui\vstcontrols.cpp" -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -o vstcontrols.o
-g++ -c ScriptCaller.cpp -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\vstgui.sf\vstgui" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -I"C:\Users\space\Desktop\js-projects\SimpleScriptCompiler" -Ofast
-g++ -c TranSynthGui.cpp -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\vstgui.sf\vstgui" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -I"C:\Users\space\Desktop\js-projects\SimpleScriptCompiler"
-g++ -c TranSynth.cpp -DWIN32 -I"D:\VST3 SDK" -I"D:\VST3 SDK\vstgui.sf\vstgui" -I"D:\VST3 SDK\plugininterfaces\source\vst2.x" -I"D:\VST3 SDK\public.sdk\source\vst2.x" -I"C:\Users\space\Desktop\js-projects\SimpleScriptCompiler" -Ofast
+
+set flags=-DVST_COMPAT -DWIN32 -DWINDOWS -DUNICODE -DWINDOWS_GUI
+g++ -c fst-extension/VSTGui/*.cpp -I"fst-extension/src/" %flags% -trigraphs
+g++ -c fst-extension/src/FstAudioEffect.cpp -I"fst-extension/VSTGui/" -I"fst-extension/src/" %flags%
+
+g++ -c ScriptCaller.cpp -I"fst-extension/VSTGui/" -I"fst-extension/src/" %flags% -I"D:\code\js\SimpleScriptCompiler" -Ofast
+g++ -c TranSynthGui.cpp -I"fst-extension/VSTGui/" -I"fst-extension/src/" %flags% -I"D:\code\js\SimpleScriptCompiler"
+g++ -c TranSynth.cpp -I"fst-extension/VSTGui/" -I"fst-extension/src/" %flags% -I"D:\code\js\SimpleScriptCompiler" -Ofast
 
 dllwrap  --output-def libTranSynth.def  --driver-name c++ ^
-AdsrEnvelope.o audioeffect.o audioeffectx.o vstplugmain.o BasicOscillator.o EnvelopeStage.o MS20Filter.o ParameterHolder.o ^
+AdsrEnvelope.o FstAudioEffect.o BasicOscillator.o EnvelopeStage.o MS20Filter.o ParameterHolder.o ^
 PluginParameter.o SubSynth.o SubSynthParam.o SubSynthParams.o SubSynthVoiceManagement.o TranSynth.o HonestEarRapeFilter.o VAStateVariableFilter.o ^
 aeffguieditor.o TranSynthGui.o vstgui.o vstcontrols.o ScriptCaller.o ^
 -L. --add-stdcall-alias -lole32 -lkernel32 -lgdi32 -lgdiplus -luuid -luser32 -lshell32 -mwindows --no-export-all-symbols --def TranSynth.def ^
