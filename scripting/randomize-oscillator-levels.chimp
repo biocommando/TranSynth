@@ -1,0 +1,15 @@
+
+include @/lib/random.inc
+include $/link-mode.js
+
+entrypoint Randomize oscillator levels
+
+for #param_set in 1 to 4
+    call generate_random_array(4)
+    set_linked Tri #param_set random@1
+    set_linked Saw #param_set random@2
+    set_linked Sqr #param_set random@3
+    set_linked Wt #param_set random@4
+loop
+
+exit

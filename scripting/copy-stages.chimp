@@ -1,0 +1,21 @@
+include @/lib/sub_extensions.js
+include $/param-helpers.js
+
+sub copy_stage(#from, #to)
+    for_each_param_start ALL
+        | array_get #PARAM at #from to #temp
+        | array_set #PARAM at #to = #temp
+    for_each_param_end
+return
+
+entrypoint Clone stage Attack to Sustain
+
+    call copy_stage(1, 3)
+
+exit
+
+entrypoint Clone stage Sustain to Attack
+
+    call copy_stage(3, 1)
+
+exit

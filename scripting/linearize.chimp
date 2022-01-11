@@ -1,0 +1,11 @@
+include $/param-helpers.js
+
+entrypoint Make linear curve from Attack to Release
+
+for_each_param_start ALL
+|    #total_diff = #PARAM@4 - #PARAM@1
+|    #diff_per_stage = #total_diff / 3
+|    #PARAM@2 = #PARAM@1 + #diff_per_stage
+|    #PARAM@3 = #PARAM@2 + #diff_per_stage
+for_each_param_end
+exit
