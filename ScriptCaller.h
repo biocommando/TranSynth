@@ -1,16 +1,16 @@
 #pragma once
 #include "audioeffectx.h"
-#include "SimpleScript.h"
+#include <map>
 #include <string>
-#include <memory>
+#include <vector>
 
 class ScriptCaller
 {
-    std::unique_ptr<SimpleScript> script = nullptr;
+    std::vector<std::vector<std::string>> pluginList;
 public:
-    ScriptCaller(const std::string &file);
+    ScriptCaller();
 
     void execute(const std::string &, AudioEffectX *eff, std::map<std::string, double> *extraParams);
 
-    std::vector<std::string> getEntryPoints();
+    std::vector<std::string> getPluginNames();
 };

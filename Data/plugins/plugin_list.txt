@@ -1,0 +1,4 @@
+Make linear curve from Attack to Release;linearize.exe
+Randomize oscillator levels;rand_osc_levels.exe
+Clone stage Attack to Sustain;copy_stages.exe;from=1;to=3
+Clone stage Sustain to Attack;copy_stages.exe;from=3;to=1

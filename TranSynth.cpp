@@ -92,7 +92,7 @@ std::ofstream *getLogger()
 
 TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster, 0, NUM_PARAMS),
                                                         presetManager(parameterHolder), downsamplingFilterLeft(0, 0),
-                                                        downsamplingFilterRight(0, 0), scriptCaller("scripts.txt")
+                                                        downsamplingFilterRight(0, 0), scriptCaller()
 {
     hasEditor();
     setNumInputs(2);         // stereo in

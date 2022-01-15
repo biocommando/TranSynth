@@ -2,6 +2,7 @@
 #include "build.h"
 #include "aeffguieditor.h"
 #include "TranSynth.h"
+#include <map>
 #include <vector>
 
 constexpr int TOP_MARGIN = 30;
@@ -353,7 +354,7 @@ public:
         setColors(macroActionList);
         macroActionList->addEntry(new CMenuItem("Macros...", 1 << 1));
         macroActionList->addEntry(new CMenuItem("Quantize wavetable windows"));
-        for (const auto &ep : synth()->getScriptCaller()->getEntryPoints())
+        for (const auto &ep : synth()->getScriptCaller()->getPluginNames())
         {
             macroActionList->addEntry(new CMenuItem(ep.c_str()));
         }
