@@ -1,18 +1,8 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
+#include <cstring>
+#include <cstdlib>
+#include <cstdio>
+#include <cmath>
 #include "PluginParameter.h"
-
-void log(PluginParameter *p)
-{
-    FILE *f = fopen("C:\\Users\\K�ytt�j�\\Documents\\Visual Studio 2013\\Projects\\TransitionSynth\\Release\\log.txt", "a");
-    char n[100], ns[8];
-    p->getName(n, 100);
-    p->getShortName(ns);
-    fprintf(f, "Parameter [id=%d]: name=%s (shortname=%s) = %f\n", p->getId(), n, ns, p->getValue());
-    fclose(f);
-}
 
 PluginParameter::PluginParameter(const std::string &name, const std::string &shortName, int id,
                                  CallbackUpdatable *cu, float defaultValue)

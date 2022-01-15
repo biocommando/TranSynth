@@ -51,7 +51,7 @@ AudioEffect *createEffectInstance(audioMasterCallback audioMaster)
     return new TranSynth(audioMaster);
 }
 
-int createId(int group, int param)
+constexpr int createId(int group, int param)
 {
     if (group == -1)
     {
@@ -60,7 +60,7 @@ int createId(int group, int param)
     return 200 * group + param;
 }
 
-int createId(int param)
+constexpr int createId(int param)
 {
     return createId(-1, param);
 }
@@ -219,7 +219,12 @@ VstInt32 TranSynth::getChunk(void **data, bool isPreset)
     }
     const auto pgmName = getPresetManager()->getProgramName();
     const short nameHdrSize = 2 + pgmName.size();
-    short hdrSize = 1 + sizeof(short) + 1 + 2 + nameHdrSize;
+    const short wtGenerationParametersLength = static_cast<short>(wtGenerationParameters.size());
+    auto includeWtHeader = voiceMgmt.isPluginGeneratedWtInUse() && wtGenerationParametersLength > 0 && wtGenerationParametersLength <= 1024;
+    const short wtHeaderSize = includeWtHeader ? 1 + sizeof(short) + wtGenerationParametersLength : 0;
+    const auto hdrSizeHdrSize = 1 + sizeof(short);
+    const auto versionHdrSize = 1 + 2;
+    const unsigned short hdrSize = hdrSizeHdrSize + versionHdrSize + nameHdrSize + wtHeaderSize;
     auto header = std::make_unique<char[]>(hdrSize);
     header[0] = 'H';
     memcpy(header.get() + 1, &hdrSize, sizeof(short));
@@ -231,7 +236,12 @@ VstInt32 TranSynth::getChunk(void **data, bool isPreset)
     const unsigned char pgmNameLen = pgmName.size();
     memcpy(header.get() + 7, &pgmNameLen, 1);
     memcpy(header.get() + 8, pgmName.c_str(), pgmNameLen);
-
+    if (includeWtHeader)
+    {
+        header[8 + pgmName.size()] = 'W';
+        memcpy(header.get() + 8 + pgmName.size() + 1, &wtGenerationParametersLength, sizeof(short));
+        memcpy(header.get() + 8 + pgmName.size() + 1 + sizeof(short), wtGenerationParameters.data(), wtGenerationParametersLength);
+    }
     auto ret = parameterHolder.serialize((char **)data, header.get(), hdrSize);
     chunk = *(char **)data;
     return ret;
@@ -242,19 +252,21 @@ VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
     const auto buf = (char *)data;
     if (buf[0] == 'H') // Header present
     {
-        short hdrSize;
+        unsigned short hdrSize;
         memcpy(&hdrSize, buf + 1, sizeof(short));
         const auto header = buf + 1 + sizeof(short);
         int versionMajor = -1; // unknown version
         int versionMinor = -1;
-        if (header[0] == 'V') // Version
+        int hdrOffset = 0;
+        if (header[hdrOffset] == 'V') // Version
         {
-            versionMajor = header[1];
-            versionMinor = header[2];
+            hdrOffset++;
+            versionMajor = header[++hdrOffset];
+            versionMinor = header[++hdrOffset];
             LOG_DEBUG("program load", "version maj", versionMajor);
             LOG_DEBUG("program load", "version min", versionMinor);
         }
-        if (hdrSize > 6 && header[3] == 'N')
+        if (hdrSize > hdrOffset + 1 && header[hdrOffset] == 'N') // Preset name
         {
             unsigned char pgmNameLen;
             memcpy(&pgmNameLen, header + 4, 1);
@@ -267,6 +279,37 @@ VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
             {
                 ((TranSynthGui *)editor)->notifyCurrentPresetNameChanged();
             }
+            hdrOffset += 2 + pgmNameLen;
+        }
+        if (hdrSize > hdrOffset + 1 && header[hdrOffset] == 'W') // Wavetable generation data
+        {
+            hdrOffset++;
+            short dataLen;
+            memcpy(&dataLen, header + hdrOffset, sizeof(short));
+            hdrOffset += sizeof(short);
+            if (dataLen > 1024)
+                dataLen = 1024;
+            if (dataLen < 0)
+                dataLen = 0;
+            char data[1024];
+            memcpy(data, header + hdrOffset, dataLen);
+            std::string pluginParameterData(data, dataLen);
+            LOG_DEBUG("setChunk", "pluginParameterData: %s", pluginParameterData.c_str());
+            scriptCaller.execute("\1" + pluginParameterData, this, {});
+            if (scriptCaller.getWtDataGenerated())
+            {
+                auto ptr = scriptCaller.getGeneratedWtData();
+                setWtGenerationParameters(pluginParameterData, ptr);
+            if (editor)
+            {
+                ((TranSynthGui *)editor)->;
+            }
+            }
+            hdrOffset += dataLen;
+        }
+        else
+        {
+            voiceMgmt.setPluginGeneratedWtInUse(false, nullptr);
         }
         parameterHolder.deserialize(buf + hdrSize);
     }
@@ -550,4 +593,17 @@ void PresetManager::saveProgram(int number, const std::string &name)
     fclose(tmp);
     closeFile();
     init();
+}
+
+void TranSynth::setWtGenerationParameters(const std::string &s, std::unique_ptr<float[]> &data)
+{
+    wtGenerationParameters = s;
+    voiceMgmt.setPluginGeneratedWtInUse(true, data.get());
+}
+
+void TranSynth::clearWtGenerationParameters()
+{
+    wtGenerationParameters = "";
+    voiceMgmt.setPluginGeneratedWtInUse(false, nullptr);
+    voiceMgmt.getWtTypeUpdater()->onUpdateWithValue(getParameterById(createId(PARAM_WT_TYPE)));
 }

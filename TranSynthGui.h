@@ -102,6 +102,11 @@ public:
             sprintf(text, "%d", vint);
         label->setText(text);
     }
+
+    void setTextLabel(const std::string &s)
+    {
+        label->setText(s.c_str());
+    }
 };
 
 class TranSynthGui : public AEffGUIEditor, public CControlListener
@@ -317,6 +322,9 @@ public:
             synth()->getParameterLongName(id, buf);
             ADD_TEXT(buf, 12 + xOffset, i + 1.25 + yOffset, GRID_X(2), TEXT_H, label->setHoriAlign(kLeftText));
             auto knob = addKnob(xframe, 14 + xOffset, i + 1 + yOffset, id, tagGlobalParam);
+            
+            if (globalParams[i] == PARAM_WT_TYPE && synth()->getWtGenerationStatus())
+                knob->setTextLabel("plugin");
         }
 
         GRID_RECT(presetNameEditRect, 6, 8, GRID_SIZE * 6, TEXT_H * 1.5);
@@ -354,6 +362,7 @@ public:
         setColors(macroActionList);
         macroActionList->addEntry(new CMenuItem("Macros...", 1 << 1));
         macroActionList->addEntry(new CMenuItem("Quantize wavetable windows"));
+        macroActionList->addEntry(new CMenuItem("Use built-in wavetables"));
         for (const auto &ep : synth()->getScriptCaller()->getPluginNames())
         {
             macroActionList->addEntry(new CMenuItem(ep.c_str()));
@@ -457,24 +466,47 @@ public:
                     setParameter(id, v);
                 }
             }
+            if (action == 2)
+            {
+                synth()->clearWtGenerationParameters();
+                for (auto &knob : knobs)
+                {
+                    if (knob->paramId == createId(PARAM_WT_TYPE))
+                        valueChanged(knob);
+                }
+            }
             else
             {
                 std::map<std::string, double> extraParams;
-                 extraParams["link_mode_code"] = linkModeList->getCurrentIndex() - 1;
+                extraParams["link_mode_code"] = linkModeList->getCurrentIndex() - 1;
                 for (int i = 0; i < 4; i++)
                 {
                     extraParams["link_mode@" + std::to_string(i + 1)] = linkMode[i];
                 }
                 synth()->getScriptCaller()->execute(title, synth(), &extraParams);
+                if (synth()->getScriptCaller()->getWtDataGenerated())
+                {
+                    auto ptr = synth()->getScriptCaller()->getGeneratedWtData();
+                    synth()->setWtGenerationParameters(synth()->getScriptCaller()->getPluginInvocationData(title), ptr);
+
+                    for (auto &knob : knobs)
+                    {
+                        if (knob->paramId == createId(PARAM_WT_TYPE))
+                            valueChanged(knob);
+                    }
+                }
             }
         }
         else if (tag == tagGroupedParam || tag == tagGlobalParam)
         {
             auto knob = (Knob *)control;
-            //const auto param = parameterList->getCurrentIndex() - 1;
+            // const auto param = parameterList->getCurrentIndex() - 1;
             const auto idx = synth()->getIndexById(knob->paramId);
             synth()->setParameterAutomated(idx, knob->getValue());
-            knob->setLabel(knob->getValue());
+            if (knob->paramId == createId(PARAM_WT_TYPE) && synth()->getWtGenerationStatus())
+                knob->setTextLabel("plugin");
+            else
+                knob->setLabel(knob->getValue());
             if (tag == tagGroupedParam && linkMode[knob->group])
             {
                 for (int i = 0; i < 4; i++)

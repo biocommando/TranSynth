@@ -203,12 +203,15 @@ void SubSynthVoiceManagement::onParamUpdated(int id, float value)
     {
     case wtUpdaterId:
     {
+        if (lock_wt_to_plugin_generated)
+            return;
         const int numValues = 16;
         int newVal = value * numValues;
         if (newVal >= numValues)
             newVal = numValues - 1;
-        if (newVal != currentWt)
+        if (newVal != currentWt || forceRegenerateWavetable)
         {
+            forceRegenerateWavetable = false;
             currentWt = newVal;
             generateWavetable(newVal);
         }

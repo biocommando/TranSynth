@@ -85,6 +85,7 @@ private:
     MultistageLowpassFilter downsamplingFilterRight;
     int oversampling = 1;
     char *chunk = nullptr;
+    std::string wtGenerationParameters;
 
     void addParameter(const std::string &name, const std::string &shortName, int id,
                       CallbackUpdatable *cu, float defaultValue = 0);
@@ -113,8 +114,17 @@ public:
     void open();
     PresetManager *getPresetManager() { return &presetManager; }
     ScriptCaller *getScriptCaller() { return &scriptCaller; }
+
+    void setWtGenerationParameters(const std::string &s, std::unique_ptr<float[]> &data);
+
+    void clearWtGenerationParameters();
+
+    bool getWtGenerationStatus()
+    {
+        return voiceMgmt.isPluginGeneratedWtInUse();
+    }
 };
 
-int createId(int group, int param);
+constexpr int createId(int group, int param);
 
-int createId(int param);
+constexpr int createId(int param);
