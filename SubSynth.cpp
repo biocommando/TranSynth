@@ -12,7 +12,7 @@ SubSynth::SubSynth() : osc1(44100),
 void SubSynth::onUpdate()
 {
     updated = true;
-    //updateParams();
+    // updateParams();
 }
 
 void SubSynth::setWavetable(float *wt)
@@ -30,6 +30,7 @@ void SubSynth::setSamplerate(int rate)
     moogFilter.setSamplerate(rate);
     herFilter.setSamplerate(rate);
     svFilter.setSamplerate(rate);
+    delayFilter.setSamplerate(rate);
     noise.setSamplerate(rate);
 }
 
@@ -47,10 +48,37 @@ void SubSynth::setFilterType(int type)
     case 2:
         filter = &herFilter;
         break;
-    default:
-        svFilter.setFilterType(type - 3);
+    case 3:
+        svFilter.setFilterType(SVFType::SVFLowpass);
         filter = &svFilter;
-    break;
+        break;
+    case 4:
+        svFilter.setFilterType(SVFType::SVFBandpass);
+        filter = &svFilter;
+        break;
+    case 5:
+        svFilter.setFilterType(SVFType::SVFHighpass);
+        filter = &svFilter;
+        break;
+    case 6:
+        svFilter.setFilterType(SVFType::SVFNotch);
+        filter = &svFilter;
+        break;
+    case 7:
+        svFilter.setFilterType(SVFType::SVFPeak);
+        filter = &svFilter;
+        break;
+    case 8:
+        delayFilter.additionalFilter = nullptr;
+        filter = &delayFilter;
+        break;
+    case 9:
+        svFilter.setFilterType(SVFType::SVFLowpass);
+        delayFilter.additionalFilter = &svFilter;
+        filter = &delayFilter;
+        break;
+    default:
+        break;
     }
 }
 
@@ -127,7 +155,7 @@ void SubSynth::setNoteFrequency(float midiNote)
 {
     this->midiNote = midiNote;
     midiNoteFreq = pow(2, midiNote / 12.0) * 8.1757989156;
-    cachedDetuneAmount = -1;  // This is reset so that the note frequency gets calculated
+    cachedDetuneAmount = -1; // This is reset so that the note frequency gets calculated
     filter->reset();
     osc1.randomizePhase();
     osc2.randomizePhase();

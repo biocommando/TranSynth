@@ -83,9 +83,10 @@ public:
                 v = 9;
             const char FilterTypeNames[][8] = {
                 "MS20", "Moog", "Aggro",
-                "LoPass", "HiPass", "BPass",
-                "BShelf", "Notch", "APass",
-                "Peak"};
+                "LoPass", "BPass", "HiPass",
+                "Notch", "Peak", "DelayA",
+                "DelayB",
+            };
             label->setText(FilterTypeNames[v]);
             return;
         }

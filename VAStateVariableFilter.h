@@ -188,7 +188,8 @@ private:
     void updateCutoff()
     {
         const float halfSr = sampleRate * 0.5 * .95;
-        auto hz = halfSr * (cut + cutmod);
+        const auto cutWithMod = cut + cutmod;
+        auto hz = halfSr * cutWithMod * cutWithMod;
         hz = hz < 0 ? -hz : hz;
         hz = hz > halfSr ? halfSr : hz;
         setCutoffFreq(hz);

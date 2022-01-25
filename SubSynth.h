@@ -4,6 +4,7 @@
 #include "MoogFilter.h"
 #include "HonestEarRapeFilter.h"
 #include "VAStateVariableFilter.h"
+#include "DelayFilter.h"
 #include "SubSynthParams.h"
 #include "CallbackUpdatable.h"
 #include "NoiseGen.h"
@@ -18,6 +19,7 @@ class SubSynth : CallbackUpdatable
     MicrotrackerMoog moogFilter;
     HonestEarRapeFilter herFilter;
     VAStateVariableFilter svFilter;
+    DelayFilter delayFilter;
     FilterBase *filter;
 
     SubSynthParams params;

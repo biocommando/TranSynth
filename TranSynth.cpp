@@ -300,10 +300,6 @@ VstInt32 TranSynth::setChunk(void *data, VstInt32 byteSize, bool isPreset)
             {
                 auto ptr = scriptCaller.getGeneratedWtData();
                 setWtGenerationParameters(pluginParameterData, ptr);
-            if (editor)
-            {
-                ((TranSynthGui *)editor)->;
-            }
             }
             hdrOffset += dataLen;
         }

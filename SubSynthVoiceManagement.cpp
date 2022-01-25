@@ -21,7 +21,7 @@ constexpr int cycleEnvelopeUpdaterId = 8;
             expr;                                        \
     } while (0)
 
-SubSynthVoiceManagement::SubSynthVoiceManagement() : counter(0)
+SubSynthVoiceManagement::SubSynthVoiceManagement() : counter(0), sampleRate(1)
 {
     wtUpdater.listener = this;
     wtUpdater.id = wtUpdaterId;
@@ -276,6 +276,10 @@ void SubSynthVoiceManagement::setSampleRate(int rate)
     sampleRate = rate;
 
     FOR_ALL_VOICES(voice->synth.setSamplerate(rate));
+    // Because envelope speeds depend on samplerate, let's set the correct envelope settings too
+    FOR_ALL_VOICES(voice->envelope.setAttack((int)(envelopeScaleFactor * sampleRate * attackUpdater.value)));
+    FOR_ALL_VOICES(voice->envelope.setDecay((int)(envelopeScaleFactor * sampleRate * decayUpdater.value)));
+    FOR_ALL_VOICES(voice->envelope.setRelease((int)(envelopeScaleFactor * sampleRate * releaseUpdater.value)));
 }
 
 SubSynthParams *SubSynthVoiceManagement::getParams(int paramSet)
