@@ -94,6 +94,7 @@ void ScriptCaller::execute(const std::string &strParam, AudioEffectX *eff,
     {
         extPlugExecutor.addParameter({item.first, item.second});
     }
+    LOG_DEBUG("execute", "Executing plugin %s", fullPathToExecutable.c_str());
     if (!extPlugExecutor.execute())
         return;
     
@@ -104,6 +105,7 @@ void ScriptCaller::execute(const std::string &strParam, AudioEffectX *eff,
         variables[item.getName()] = item.getValue();
         if (item.getName() == "wt_generated" && item.getValue() > 0.1)
         {
+            LOG_DEBUG("execute", "wt_generated found",1);
             wtDataGenerated = true;
         }
     }

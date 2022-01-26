@@ -15,14 +15,14 @@
 
 std::ofstream *getLogger();
 
-#define LOG_WITH_LEVEL(level, logger, fmt, ...)                                             \
-    do                                                                                      \
-    {                                                                                       \
-        char s[1024];                                                                       \
-        sprintf(s, fmt, __VA_ARGS__);                                                       \
-        auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());    \
-        auto tm = std::string(std::ctime(&t)).substr(0, 24);                                \
-        (*getLogger()) << tm << " - [" << logger << "] " << level << ' ' << s << std::endl; \
+#define LOG_WITH_LEVEL(level, logger, fmt, ...)                                                         \
+    do                                                                                                  \
+    {                                                                                                   \
+        char LOGGER__log_s[1024];                                                                       \
+        sprintf(LOGGER__log_s, fmt, __VA_ARGS__);                                                       \
+        auto t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());                \
+        auto tm = std::string(std::ctime(&t)).substr(0, 24);                                            \
+        (*getLogger()) << tm << " - [" << logger << "] " << level << ' ' << LOGGER__log_s << std::endl; \
     } while (0)
 
 #if LOG_LEVEL <= LOG_LEVEL_DEBUG

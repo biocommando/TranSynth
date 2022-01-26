@@ -4,9 +4,22 @@
 
 FILE *wt_data_f;
 
+void read_wave_name(char *wave_name)
+{
+    FOR_EACH_PARAMETER(i)
+    {
+        if (parameters[i].name[0] == '$')
+        {
+            const char *_wave_name = &parameters[i].name[1];
+            strcpy(wave_name, _wave_name);
+            return;
+        }
+    }
+}
+
 WT_PLUGIN_INIT()
 {
-    char wave_name[16];
+    char wave_name[64];
     for (int i = 0; i < 8; i++)
     {
         char buf[] = "namex";
@@ -14,6 +27,8 @@ WT_PLUGIN_INIT()
         wave_name[i] = (char)PS(buf);
     }
     wave_name[8] = 0;
+    if (!wave_name[0])
+        read_wave_name(wave_name);
     strcat(wave_name, ".bin");
     FILE_PATH(wave_name, wave_path);
     wt_data_f = fopen(wave_path, "rb");

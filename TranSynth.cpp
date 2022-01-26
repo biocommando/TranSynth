@@ -499,6 +499,13 @@ bool PresetManager::readProgram(int number, std::string &name, bool readNameOnly
             if (auto p = parameterHolder.getParameterById(id))
                 p->setValue(value);
         }
+        if (cmd == '@' && doLoadProgram)
+        {
+            readWtGenParams = std::string(&buf[2]);
+            if (readWtGenParams.back() == '\n')
+                readWtGenParams = readWtGenParams.substr(0, readWtGenParams.size() - 1);
+            LOG_DEBUG("readProgram", "Read wtgen params %s", readWtGenParams.c_str());
+        }
         if (cmd == '$')
         {
             buf[strlen(buf) - 1] = 0;
@@ -545,16 +552,18 @@ void PresetManager::closeFile()
         f = nullptr;
     }
 }
-std::string PresetManager::readProgram(int number)
+std::string PresetManager::readProgram(int number, std::string &wtGenerationParametersOut)
 {
+    readWtGenParams = "";
     std::string s;
     openFile(0);
     readProgram(number, s, false);
     closeFile();
+    wtGenerationParametersOut.assign(readWtGenParams);
     return s;
 }
 
-void PresetManager::saveProgram(int number, const std::string &name)
+void PresetManager::saveProgram(int number, const std::string &name, const std::string &wtGenerationParameters)
 {
     curProgramName = name;
     std::string presetTmpFileName = std::string(workDir) + "\\" + "TranSynPresets.tmp";
@@ -577,6 +586,10 @@ void PresetManager::saveProgram(int number, const std::string &name)
         auto p = parameterHolder.getParameterByIndex(i);
         fprintf(tmp, "+ %d %f\n", p->getId(), p->getValue());
     }
+    if (wtGenerationParameters != "")
+    {
+        fprintf(tmp, "@ %s\n", wtGenerationParameters.c_str());
+    }
     fprintf(tmp, "}\n");
     fclose(tmp);
     closeFile();
@@ -593,6 +606,7 @@ void PresetManager::saveProgram(int number, const std::string &name)
 
 void TranSynth::setWtGenerationParameters(const std::string &s, std::unique_ptr<float[]> &data)
 {
+    LOG_DEBUG("setWtGenerationParameters", "params set to %s", s.c_str());
     wtGenerationParameters = s;
     voiceMgmt.setPluginGeneratedWtInUse(true, data.get());
 }

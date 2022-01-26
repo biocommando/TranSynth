@@ -50,6 +50,7 @@ private:
     void init();
     void openFile(int rw);
     void closeFile();
+    std::string readWtGenParams;
     bool readProgram(int number, std::string &name, bool readNameOnly, FILE *copyToTmp = nullptr);
 
 public:
@@ -60,9 +61,9 @@ public:
         init();
     }
 
-    std::string readProgram(int number);
+    std::string readProgram(int number, std::string &wtGenerationParametersOut);
 
-    void saveProgram(int number, const std::string &name);
+    void saveProgram(int number, const std::string &name, const std::string &wtGenerationParameters);
 
     void refresh()
     {
@@ -122,6 +123,11 @@ public:
     bool getWtGenerationStatus()
     {
         return voiceMgmt.isPluginGeneratedWtInUse();
+    }
+
+    std::string getWtGenerationParameters()
+    {
+        return wtGenerationParameters;
     }
 };
 

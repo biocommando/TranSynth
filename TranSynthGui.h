@@ -2,6 +2,7 @@
 #include "build.h"
 #include "aeffguieditor.h"
 #include "TranSynth.h"
+#include "Log.h"
 #include <map>
 #include <vector>
 
@@ -424,12 +425,35 @@ public:
         {
             auto presetMgr = synth()->getPresetManager();
             presetNumber = presetList->getCurrentIndex() - 1;
-            currentPresetName = presetMgr->readProgram(presetNumber);
+            std::string wtGenParams;
+            currentPresetName = presetMgr->readProgram(presetNumber, wtGenParams);
             currentPresetNameEdit->setText(currentPresetName.c_str());
             presetList->setCurrent(0);
             for (int i = 0; i < knobs.size(); i++)
             {
                 knobs[i]->setValue(synth()->getParameterById(knobs[i]->paramId));
+            }
+
+            LOG_DEBUG("gui", "Read wtGenParams %s", wtGenParams.c_str());
+            if (wtGenParams != "")
+            {
+                auto scriptCaller = synth()->getScriptCaller();
+                scriptCaller->execute("\1" + wtGenParams, synth(), {});
+                if (scriptCaller->getWtDataGenerated())
+                {
+                    auto ptr = scriptCaller->getGeneratedWtData();
+                    synth()->setWtGenerationParameters(wtGenParams, ptr);
+
+                    for (auto &knob : knobs)
+                    {
+                        if (knob->paramId == createId(PARAM_WT_TYPE))
+                            valueChanged(knob);
+                    }
+                }
+            }
+            else
+            {
+                synth()->clearWtGenerationParameters();
             }
         }
         else if (tag == tagPresetActionList)
@@ -437,15 +461,18 @@ public:
             auto presetMgr = synth()->getPresetManager();
             const auto action = presetActionList->getCurrentIndex();
             presetActionList->setCurrent(0);
+            std::string wtGenParams;
+            if (synth()->getWtGenerationStatus())
+                wtGenParams = synth()->getWtGenerationParameters();
             if (action == 1 && presetNumber >= 0) // save / replace
             {
-                presetMgr->saveProgram(presetNumber, currentPresetName);
+                presetMgr->saveProgram(presetNumber, currentPresetName, wtGenParams);
                 presetList->getEntry(presetNumber + 1)->setTitle(currentPresetName.c_str());
             }
             else // save as new
             {
                 presetMgr->refresh();
-                presetMgr->saveProgram(presetMgr->presetNames.size(), currentPresetName);
+                presetMgr->saveProgram(presetMgr->presetNames.size(), currentPresetName, wtGenParams);
                 presetNumber = presetMgr->presetNames.size();
 
                 presetList->addEntry(new CMenuItem(currentPresetName.c_str()));
