@@ -58,7 +58,7 @@ public:
     // softer
     void notifyNoteOff() { released = true; }
     void onUpdate();
-    float getValue();
+    float getValue() const { return value; }
     void setSamplerate(int rate);
     void setWavetable(float *wt);
     void setLfoRange(float maxHz);

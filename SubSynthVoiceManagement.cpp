@@ -305,7 +305,7 @@ void SubSynthVoiceManagement::updateSynthParams()
         {
             auto envelope = &voice->envelope;
             const auto envStage = envelope->getStage();
-            auto envRatio = envelope->getRatio();
+            const auto envRatio = envelope->getRatio();
             switch (envStage)
             {
             case 0:
@@ -321,10 +321,14 @@ void SubSynthVoiceManagement::updateSynthParams()
                 const auto releaseStage = envelope->getReleaseStage();
                 if (releaseStage < 2)
                 {
-                    // First calculate the state where the voice was left just before release
-                    interpolated.paramValuesFromInterpolatedParams(params[releaseStage], params[releaseStage + 1], envelope->getRatio(releaseStage));
+                    if (!voice->paramStateAtReleaseSet)
+                    {
+                        // First calculate the state where the voice was left just before release
+                        voice->paramStateAtRelease.paramValuesFromInterpolatedParams(params[releaseStage], params[releaseStage + 1], envelope->getRatio(releaseStage));
+                        voice->paramStateAtReleaseSet = true;
+                    }
                     // Then interpolate the parameters between that state and the final stage
-                    interpolated.paramValuesFromInterpolatedParams(interpolated, params[3], envRatio);
+                    interpolated.paramValuesFromInterpolatedParams(voice->paramStateAtRelease, params[3], envRatio);
                 }
                 else
                 {
@@ -438,6 +442,7 @@ void SubSynthVoiceManagement::activateVoice(int voiceIndex, float midiNote, int 
     voice->velocity = vel1;
     voice->counter = nextCounter();
     voice->channel = channel;
+    voice->paramStateAtReleaseSet = false;
     updateSynthParams();
 }
 

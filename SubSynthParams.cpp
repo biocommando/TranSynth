@@ -155,7 +155,7 @@ void SubSynthParams::paramValuesFromInterpolatedParams(SubSynthParams &p1, SubSy
         if (v1 != v2)
         {
             const float interPolatedValue = v1 + (v2 - v1) * ratio;
-            if (fabs(interPolatedValue - params[i].getValue()) > 1e-6)
+            if (fabs(interPolatedValue - params[i].getValue()) > 0.00006103515625f) // corresponds to ~14 bit precision
             {
                 paramsDidChange = params[i].setValueBypassingCallback(interPolatedValue) || paramsDidChange;
             }

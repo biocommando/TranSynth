@@ -18,6 +18,9 @@ public:
     long counter;
     int channel;
 
+    SubSynthParams paramStateAtRelease;
+    bool paramStateAtReleaseSet;
+
     SubSynthVoice() : active(false), midiNote(-1)
     {
     }

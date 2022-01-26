@@ -1,6 +1,9 @@
 rem @echo off
 echo #pragma once > build.h
 echo #define BUILD_DATE "%date:* =% %time:,=.%" >> build.h
+echo #define GIT_COMMIT \>> build.h
+git log --format=\""%%h\"" -n 1 >> build.h
+
 g++ -c AdsrEnvelope.cpp BasicOscillator.cpp EnvelopeStage.cpp MS20Filter.cpp ^
     ParameterHolder.cpp  PluginParameter.cpp SubSynth.cpp SubSynthParam.cpp ^
     SubSynthParams.cpp SubSynthVoiceManagement.cpp HonestEarRapeFilter.cpp ^

@@ -188,13 +188,13 @@ float SubSynth::getOscValue(enum OscType osc)
     {
         if (osc2MixLevel > 1e-5)
         {
-            osc2MixLevel *= .9996;
+            osc2MixLevel *= .9996; // this might be modified multiple times when processing one sample
             return osc1.getValue(osc) + osc2.getValue(osc) * osc2MixLevel;
         }
         return osc1.getValue(osc);
     }
     if (osc2MixLevel < 1 && released)
-        osc2MixLevel *= 1.001;
+        osc2MixLevel *= 1.001; // this might be modified multiple times when processing one sample
     else
         osc2MixLevel = 1;
     return osc1.getValue(osc) + osc2.getValue(osc) * osc2MixLevel;
@@ -218,13 +218,13 @@ void SubSynth::calculateNext()
     osc2.calculateNext();
 
     float oscOutput = 0, oscAmount;
-    if ((oscAmount = params.getSawAmount()) > 0)
+    if ((oscAmount = params.getSawAmount()) > 1e-6)
         oscOutput += getOscValue(OSC_SAW) * oscAmount;
-    if ((oscAmount = params.getSqrAmount()) > 0)
+    if ((oscAmount = params.getSqrAmount()) > 1e-6)
         oscOutput += getOscValue(OSC_SQUARE) * oscAmount;
-    if ((oscAmount = params.getTriAmount()) > 0)
+    if ((oscAmount = params.getTriAmount()) > 1e-6)
         oscOutput += getOscValue(OSC_TRIANGLE) * oscAmount;
-    if ((oscAmount = params.getWtMix()) > 0)
+    if ((oscAmount = params.getWtMix()) > 1e-6)
         oscOutput += getOscValue(OSC_WT) * oscAmount;
 
     oscOutput *= 0.5f;
@@ -242,9 +242,4 @@ void SubSynth::calculateNext()
 void SubSynth::setExternalCutoffModulation(float value)
 {
     externalCutoffModulation = value;
-}
-
-float SubSynth::getValue()
-{
-    return value;
 }

@@ -370,7 +370,8 @@ public:
         }
         xframe->addView(macroActionList);
 
-        ADD_TEXT("v 1.0 build " BUILD_DATE, 14, 8.25, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
+        ADD_TEXT("v 1.0 build " BUILD_DATE, 14, 8, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
+        ADD_TEXT("commit " GIT_COMMIT, 14, 8.25, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
         ADD_TEXT("(c) 2017-2021 Joonas Salonpaa", 14, 8.5, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
         ADD_TEXT("github.com/biocommando/TranSynth", 14, 8.75, 4 * GRID_SIZE, TEXT_H, label->setHoriAlign(kRightText));
 
