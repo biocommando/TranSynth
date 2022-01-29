@@ -17,8 +17,9 @@ WT_PLUGIN_INIT()
         char _wave_name[STR_LENGTH];
         snprintf(_wave_name, STR_LENGTH, "%s.bin", wave_name);
         FILE_PATH(_wave_name, wave_path);
-        wt_data_f = fopen(_wave_name, "rb");
+        wt_data_f = fopen(wave_path, "rb");
         format = P(fmt);
+        LOG("Opened file %s, using format %d", wave_path, format);
     }
 }
 
@@ -38,10 +39,12 @@ void calculate_wavetable(float *data, int size)
 
     if (format == FMT_FLOAT32)
     {
+        LOG_TRACE("Read float data...");
         fread(data, sizeof(float), size, wt_data_f);
     }
     if (format == FMT_INT8)
     {
+        LOG_TRACE("Read int8 data...");
         char *buf = (char *)malloc(size);
         fread(buf, 1, size, wt_data_f);
         for (int i = 0; i < size; i++)
@@ -52,6 +55,7 @@ void calculate_wavetable(float *data, int size)
     }
     if (format == FMT_INT16)
     {
+        LOG_TRACE("Read int16 data...");
         short *buf = (short *)malloc(size * sizeof(short));
         fread(buf, sizeof(short), size, wt_data_f);
         for (int i = 0; i < size; i++)

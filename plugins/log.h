@@ -65,11 +65,11 @@ void log_lifecycle(const char *ipc_file)
 
 // Logging macros, use LOG_TRACE, LOG and LOG_ERROR for logging in source files
 
-#define DO_LOG(level, ...)                    \
-    do                                        \
-    {                                         \
-        sprintf(log_buffer, __VA_ARGS__);     \
-        log_write(__FILE__, __LINE__, level); \
+#define DO_LOG(level, ...)                       \
+    do                                           \
+    {                                            \
+        snprintf(log_buffer, 1024, __VA_ARGS__); \
+        log_write(__FILE__, __LINE__, level);    \
     } while (0)
 
 #define LOG_TRACE(...) DO_LOG(LOG_LEVEL_TRACE, __VA_ARGS__)
