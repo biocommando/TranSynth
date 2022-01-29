@@ -142,6 +142,6 @@ public:
         lock_wt_to_plugin_generated = status;
         forceRegenerateWavetable = true;
         if (wt_data)
-            memcpy(wt, wt_data, wtSize);
+            memcpy(wt, wt_data, wtSize * sizeof(float));
     }
 };

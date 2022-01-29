@@ -6,8 +6,6 @@
 
 PLUGIN()
 {
-    int stage_already_tweaked[] = {0, 0, 0, 0};
-
     FOR_EACH_STAGE_P_NAME(name)
     {
         ONLY_PARAMETERS(name, "Tri", "Saw", "Sqr", "Wt");

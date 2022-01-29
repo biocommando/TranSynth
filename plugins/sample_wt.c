@@ -2,44 +2,62 @@
 #define LOG_LEVEL LOG_LEVEL_TRACE*/
 #include "wt_out_streamer.h"
 
-FILE *wt_data_f;
+FILE *wt_data_f = NULL;
+const int FMT_FLOAT32 = 0;
+const int FMT_INT8 = 1;
+const int FMT_INT16 = 2;
 
-void read_wave_name(char *wave_name)
-{
-    FOR_EACH_PARAMETER(i)
-    {
-        if (parameters[i].name[0] == '$')
-        {
-            const char *_wave_name = &parameters[i].name[1];
-            strcpy(wave_name, _wave_name);
-            return;
-        }
-    }
-}
+int format;
 
 WT_PLUGIN_INIT()
 {
-    char wave_name[64];
-    for (int i = 0; i < 8; i++)
+    char wave_name[STR_LENGTH];
+    if (get_string_parameter("", wave_name) >= 0)
     {
-        char buf[] = "namex";
-        sprintf(buf, "name%d", i);
-        wave_name[i] = (char)PS(buf);
+        char _wave_name[STR_LENGTH];
+        snprintf(_wave_name, STR_LENGTH, "%s.bin", wave_name);
+        FILE_PATH(_wave_name, wave_path);
+        wt_data_f = fopen(_wave_name, "rb");
+        format = P(fmt);
     }
-    wave_name[8] = 0;
-    if (!wave_name[0])
-        read_wave_name(wave_name);
-    strcat(wave_name, ".bin");
-    FILE_PATH(wave_name, wave_path);
-    wt_data_f = fopen(wave_path, "rb");
 }
 
 void destroy_wt_plugin()
 {
-    fclose(wt_data_f);
+    if (wt_data_f)
+        fclose(wt_data_f);
 }
 
 void calculate_wavetable(float *data, int size)
 {
-    fread(data, sizeof(float), size, wt_data_f);
+    if (!wt_data_f || format < FMT_FLOAT32 || format > FMT_INT16)
+    {
+        memset(data, 0, sizeof(float) * size);
+        return;
+    }
+
+    if (format == FMT_FLOAT32)
+    {
+        fread(data, sizeof(float), size, wt_data_f);
+    }
+    if (format == FMT_INT8)
+    {
+        char *buf = (char *)malloc(size);
+        fread(buf, 1, size, wt_data_f);
+        for (int i = 0; i < size; i++)
+        {
+            data[i] = buf[i] / (float)(1 << 7);
+        }
+        free(buf);
+    }
+    if (format == FMT_INT16)
+    {
+        short *buf = (short *)malloc(size * sizeof(short));
+        fread(buf, sizeof(short), size, wt_data_f);
+        for (int i = 0; i < size; i++)
+        {
+            data[i] = buf[i] / (float)(1 << 15);
+        }
+        free(buf);
+    }
 }

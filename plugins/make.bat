@@ -1,4 +1,4 @@
-set CC=gcc -static
+set CC=gcc -static -Wall
 
 if "%1"=="tcc" (set CC=.\tcc\tcc.exe)
 

@@ -12,8 +12,7 @@ char dir_path[1024];
 
 #define FILE_PATH(file, out) \
     char out[1024];          \
-    strcpy(out, dir_path);   \
-    strcat(out, file)
+    snprintf(out, 1024, "%s%s", dir_path, file)
 
 void get_dir_path(const char *s)
 {

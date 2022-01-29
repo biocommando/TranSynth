@@ -27,8 +27,10 @@ double *get_param_at_stage_v(const char *name, int stage)
 
 #define STAGE_P(name, stage) (*get_param_at_stage_v(name, stage))
 
+int stage_p_idx = 0;
 #define FOR_EACH_STAGE_P_NAME(name) \
-    for (char *name = all_params[0], i = 0; all_params[i][0]; i++, name = all_params[i])
+    stage_p_idx = 0;                \
+    for (char *name = all_params[0]; all_params[stage_p_idx][0]; name = all_params[++stage_p_idx])
 
 #define INC_EXC_PARAMETERS(name, mode, ...)                  \
     {                                                        \

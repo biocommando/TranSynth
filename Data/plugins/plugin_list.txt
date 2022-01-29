@@ -2,7 +2,7 @@ Make linear curve from Attack to Release;linearize.exe
 Randomize oscillator levels;rand_osc_levels.exe
 Clone stage Attack to Sustain;copy_stages.exe;from=1;to=3
 Clone stage Sustain to Attack;copy_stages.exe;from=3;to=1
-Wavetable: Guitar;sample_wt.exe;$guitar=0
+Wavetable: Guitar;sample_wt.exe;$guitar_fmt2=0;fmt=2
 Wavetable: Male vocal;sample_wt.exe;$m_vocal=0
 Wavetable: Drum beat;sample_wt.exe;$drumbeat=0
 Wavetable: Additive random;additive_wt.exe

@@ -56,7 +56,7 @@ inline float sqr1(float phase)
     return phase < 0.5 ? 1.0f : -1.0f;
 }
 
-inline float wt1(float *wt, float phase, int pos, int window, float dcFilterState[2])
+inline float wt1(const float *wt, float phase, int pos, int window, float dcFilterState[2])
 {
     const float value = wt[(int)(pos + window * phase)];
 
