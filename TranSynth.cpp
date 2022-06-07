@@ -97,7 +97,7 @@ TranSynth::TranSynth(audioMasterCallback audioMaster) : AudioEffectX(audioMaster
     hasEditor();
     setNumInputs(2);         // stereo in
     setNumOutputs(2);        // stereo out
-    setUniqueID(-809164751); // identify
+    setUniqueID(CCONST('T', 'r', 'z', 'y')); // identify
     isSynth(true);
     programsAreChunks();
 
